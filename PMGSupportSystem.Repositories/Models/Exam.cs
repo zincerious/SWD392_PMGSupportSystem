@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace PMGSupportSystem.Repositories.Models;
 
@@ -19,8 +20,8 @@ public partial class Exam
 
     public string BaremFile { get; set; }
 
-    public bool? Status { get; set; }
-
+    public string Status { get; set; }
+    [JsonIgnore]
     public virtual ICollection<Submission> Submissions { get; set; } = new List<Submission>();
 
     public virtual User UploadByNavigation { get; set; }

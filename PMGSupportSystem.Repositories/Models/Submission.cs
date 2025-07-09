@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace PMGSupportSystem.Repositories.Models;
 
@@ -26,14 +27,14 @@ public partial class Submission
     public string Status { get; set; }
 
     public virtual Exam Exam { get; set; }
-
+    [JsonIgnore]
     public virtual ICollection<GradeRound> GradeRounds { get; set; } = new List<GradeRound>();
 
     public virtual User PublishedByNavigation { get; set; }
-
+    [JsonIgnore]
     public virtual ICollection<RegradeRequest> RegradeRequests { get; set; } = new List<RegradeRequest>();
 
     public virtual User Student { get; set; }
-
+    [JsonIgnore]
     public virtual ICollection<SubmissionDistribution> SubmissionDistributions { get; set; } = new List<SubmissionDistribution>();
 }
