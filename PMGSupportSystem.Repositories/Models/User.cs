@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace PMGSupportSystem.Repositories.Models;
 
@@ -22,22 +23,22 @@ public partial class User
     public string Code { get; set; }
 
     public bool? Status { get; set; }
-
+    [JsonIgnore]
     public virtual ICollection<Exam> Exams { get; set; } = new List<Exam>();
-
+    [JsonIgnore]
     public virtual ICollection<GradeRound> GradeRoundCoLecturers { get; set; } = new List<GradeRound>();
-
+    [JsonIgnore]
     public virtual ICollection<GradeRound> GradeRoundLecturers { get; set; } = new List<GradeRound>();
-
+    [JsonIgnore]
     public virtual ICollection<RegradeRequest> RegradeRequestExaminers { get; set; } = new List<RegradeRequest>();
-
+    [JsonIgnore]
     public virtual ICollection<RegradeRequest> RegradeRequestStudents { get; set; } = new List<RegradeRequest>();
-
+    [JsonIgnore]
     public virtual ICollection<RegradeRequest> RegradeRequestUpdatedByNavigations { get; set; } = new List<RegradeRequest>();
-
+    [JsonIgnore]
     public virtual ICollection<SubmissionDistribution> SubmissionDistributions { get; set; } = new List<SubmissionDistribution>();
-
+    [JsonIgnore]
     public virtual ICollection<Submission> SubmissionPublishedByNavigations { get; set; } = new List<Submission>();
-
+    [JsonIgnore]
     public virtual ICollection<Submission> SubmissionStudents { get; set; } = new List<Submission>();
 }

@@ -6,6 +6,11 @@ namespace PMGSupportSystem.Repositories
     public interface IUnitOfWork
     {
         UserRepository UserRepository { get; }
+        SubmissionRepository SubmissionRepository { get; }
+        ExamRepository ExamRepository { get; }
+        GradeRoundRepository GradeRoundRepository { get; }
+        DistributionRepository DistributionRepository { get; }
+        RegradeRequestRepository RegradeRequestRepository { get; }
         JwtHelper JwtHelper { get; }
         Task<int> SaveChangesAsync();
         Task Dispose();
@@ -14,6 +19,11 @@ namespace PMGSupportSystem.Repositories
     {
         private readonly SU25_SWD392Context _context;
         private UserRepository? _userRepository;
+        private SubmissionRepository? _submissionRepository;
+        private ExamRepository? _examRepository;
+        private GradeRoundRepository? _gradeRoundRepository;
+        private DistributionRepository? _distributionRepository;
+        private RegradeRequestRepository? _rewardRequestRepository;
         private readonly JwtHelper _jwtHelper;
         public UnitOfWork(SU25_SWD392Context context, JwtHelper jwtHelper)
         {
@@ -25,6 +35,42 @@ namespace PMGSupportSystem.Repositories
             get
             {
                 return _userRepository ??= new UserRepository(_context);
+            }
+        }
+        public SubmissionRepository SubmissionRepository
+        {
+            get
+            {
+                return _submissionRepository ??= new SubmissionRepository(_context);
+            }
+        }
+        public ExamRepository ExamRepository
+        {
+            get
+            {
+                return _examRepository ??= new ExamRepository(_context);
+            }
+        }
+        public GradeRoundRepository GradeRoundRepository
+        {
+            get
+            {
+                return _gradeRoundRepository ??= new GradeRoundRepository(_context);
+            }
+        }
+        public DistributionRepository DistributionRepository
+        {
+            get
+            {
+                return _distributionRepository ??= new DistributionRepository(_context);
+            }
+        }
+
+        public RegradeRequestRepository RegradeRequestRepository
+        {
+            get
+            {
+                return _rewardRequestRepository ??= new RegradeRequestRepository(_context);
             }
         }
         public JwtHelper JwtHelper => _jwtHelper;

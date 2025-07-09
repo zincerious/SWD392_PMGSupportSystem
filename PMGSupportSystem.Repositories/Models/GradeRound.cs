@@ -23,11 +23,11 @@ public partial class GradeRound
 
     public Guid? CoLecturerId { get; set; }
 
-    public int? MeetingUrl { get; set; }
+    public string MeetingUrl { get; set; }
 
     public DateTime? ScheduleAt { get; set; }
 
-    public bool? Status { get; set; }
+    public string Status { get; set; }
 
     public virtual User CoLecturer { get; set; }
 

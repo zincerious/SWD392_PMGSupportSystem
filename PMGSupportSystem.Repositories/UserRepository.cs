@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PMGSupportSyetm.Repositories.Basics;
+using PMGSupportSystem.Repositories.Basics;
 using PMGSupportSystem.Repositories.DBContext;
 using PMGSupportSystem.Repositories.Models;
 
@@ -22,11 +22,6 @@ namespace PMGSupportSystem.Repositories
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        }
-
-        public async Task AddRangeAsync(IEnumerable<User> users)
-        {
-            await _context.Users.AddRangeAsync(users);
         }
     }
 }
