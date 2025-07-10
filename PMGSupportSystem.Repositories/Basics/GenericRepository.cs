@@ -2,7 +2,7 @@
 using PMGSupportSystem.Repositories.DBContext;
 using System.Linq.Expressions;
 
-namespace PMGSupportSyetm.Repositories.Basics
+namespace PMGSupportSystem.Repositories.Basics
 {
     public class GenericRepository<T> where T : class
     {
@@ -33,6 +33,12 @@ namespace PMGSupportSyetm.Repositories.Basics
         public async Task CreateAsync(T entity)
         {
             await _context.Set<T>().AddAsync(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddRangeAsync(IEnumerable<T> entities)
+        {
+            await _context.AddRangeAsync(entities);
             await _context.SaveChangesAsync();
         }
 

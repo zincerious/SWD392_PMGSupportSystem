@@ -96,7 +96,7 @@ public partial class SU25_SWD392Context : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("gradeAt");
             entity.Property(e => e.LecturerId).HasColumnName("lecturerId");
-            entity.Property(e => e.MeetingUrl).HasColumnName("meetingUrl");
+            entity.Property(e => e.MeetingUrl).HasMaxLength(255).IsUnicode(false).HasColumnName("meetingUrl");
             entity.Property(e => e.Note)
                 .HasMaxLength(255)
                 .IsUnicode(false)
