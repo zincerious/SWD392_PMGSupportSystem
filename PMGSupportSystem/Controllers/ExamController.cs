@@ -168,7 +168,7 @@ namespace PMGSupportSystem.Controllers
                 return Unauthorized("You must be logged in as Department Leader");
             }
 
-            Guid? examinerId = Guid.TryParse(departmentLeaderIdString, out var parseId) ? parseId : null;
+            Guid? departmentId = Guid.TryParse(departmentLeaderIdString, out var parseId) ? parseId : null;
 
             var result = await _servicesProvider.ExamService.AutoAssignLecturersAsync(parseId, assignmentId);
             if (!result)
