@@ -19,13 +19,13 @@ namespace PMGSupportSystem.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Exam>?> GetAssignmentsAsync()
+        public async Task<IEnumerable<Exam>?> GetExamsAsync()
         {
             var exams = await _context.Exams.Include(a => a.UploadByNavigation).ToListAsync();
             return exams;
         }
 
-        public async Task<Exam?> GetAssignmentByIdAsync(Guid id)
+        public async Task<Exam?> GetExamByIdAsync(Guid id)
         {
             var exam = await _context.Exams
                 .Include(a => a.UploadByNavigation)
@@ -33,7 +33,7 @@ namespace PMGSupportSystem.Repositories
             return exam;
         }
 
-        public async Task<IEnumerable<Exam>?> SearchAssignmentsAsync(Guid? examinerId, DateTime uploadedAt, string status)
+        public async Task<IEnumerable<Exam>?> SearchExamsAsync(Guid? examinerId, DateTime uploadedAt, string status)
         {
             var exams = await _context.Exams.Include(a => a.UploadByNavigation)
                 .Where(e => (!examinerId.HasValue || e.UploadBy == examinerId) &&
@@ -137,17 +137,18 @@ namespace PMGSupportSystem.Repositories
             }
         }
 
-        public async Task<IEnumerable<Exam>> GetAssignmentsByExaminerAsync(Guid examinerId)
+        public async Task<IEnumerable<Exam>> GetExamsByExaminerAsync(Guid examinerId)
         {
             return await _context.Exams
+                .Include(e => e.UploadByNavigation)
                 .Where(a => a.UploadBy == examinerId)
                 .OrderByDescending(a => a.UploadedAt)
                 .ToListAsync();
         }
 
-        public async Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByAssignmentIdAsync(Guid id)
+        public async Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id)
         {
-            var exam = await GetAssignmentByIdAsync(id);
+            var exam = await GetExamByIdAsync(id);
             if (exam == null || string.IsNullOrEmpty(exam.FilePath) || string.IsNullOrEmpty(exam.BaremFile))
             {
                 return (null, null);
@@ -209,7 +210,7 @@ namespace PMGSupportSystem.Repositories
 
         public async Task<string?> GetTextContentForAIAsync(Guid examId)
         {
-            var exam = await GetAssignmentByIdAsync(examId);
+            var exam = await GetExamByIdAsync(examId);
             if (exam == null || string.IsNullOrEmpty(exam.FilePath))
                 return null;
 

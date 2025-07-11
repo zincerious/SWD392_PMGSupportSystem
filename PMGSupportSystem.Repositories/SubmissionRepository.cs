@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using PMGSupportSystem.Repositories.Basics;
 using PMGSupportSystem.Repositories.DBContext;
 using PMGSupportSystem.Repositories.Models;
@@ -29,12 +30,39 @@ namespace PMGSupportSystem.Repositories
                 .ToListAsync();
         }
 
+        public async Task<(IEnumerable<Submission> Items, int TotalCount)> GetPagedSubmissionsAsync(int page, int pageSize)
+        {
+            var result = await GetPagedListAsync(
+                page,
+                pageSize,
+                filter: null,
+                orderBy: q => q.OrderByDescending(s => s.SubmittedAt)
+            );
+             
+            // Include student
+            var itemsWithStudent = result.Items
+                .Select(s => _context.Submissions
+                    .Include(x => x.Student)
+                    .FirstOrDefault(x => x.SubmissionId == s.SubmissionId))
+                .Where(x => x != null)
+                .ToList();
+
+            return (itemsWithStudent!, result.TotalCount);
+        }
+
+
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId)
         {
             return await _context.Submissions
                 .Where(s => s.ExamId == examId)
                 .Include(s => s.Student)
                 .ToListAsync();
+        }
+
+        public async Task<Submission?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId)
+        {
+            return await _context.Submissions
+                .FirstOrDefaultAsync(s => s.ExamId == examId && s.StudentId == studentId);
         }
 
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid examId, IEnumerable<Guid> studentIds)
