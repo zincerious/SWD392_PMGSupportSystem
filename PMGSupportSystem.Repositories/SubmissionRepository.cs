@@ -59,6 +59,12 @@ namespace PMGSupportSystem.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Submission?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId)
+        {
+            return await _context.Submissions
+                .FirstOrDefaultAsync(s => s.ExamId == examId && s.StudentId == studentId);
+        }
+
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid examId, IEnumerable<Guid> studentIds)
         {
             return await _context.Submissions
