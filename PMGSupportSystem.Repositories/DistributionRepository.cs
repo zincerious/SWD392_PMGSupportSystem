@@ -40,5 +40,7 @@ namespace PMGSupportSystem.Repositories
                 .Include(d => d.Lecturer)
                 .ToListAsync();
         }
+
+        
     }
 }

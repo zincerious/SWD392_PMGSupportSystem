@@ -113,5 +113,15 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             var zipFileName = $"Submissions_{assignmentId}.zip";
             return File(memoryStream.ToArray(), "application/zip", zipFileName);
         }
+
+        [Authorize(Roles = "DepartmentLeader")]
+        [HttpGet("submission-table")]
+        public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
+        {
+            var (items, total) = await _servicesProvider.SubmissionService.GetSubmissionTableAsync(page, pageSize);
+            return Ok(new { total, data = items });
+        }
+
+
     }
 }
