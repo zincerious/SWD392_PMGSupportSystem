@@ -47,7 +47,7 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Examiner")]
-        [HttpPost("upload-barem/{assignmentId}")]
+        [HttpPost("upload-barem/{examId}")]
         public async Task<IActionResult> UploadBarem([FromRoute] Guid examId, [FromForm] FileDTO uploadBaremDTO)
         {
             if (uploadBaremDTO.DTOFile == null || uploadBaremDTO.DTOFile.Length == 0)
