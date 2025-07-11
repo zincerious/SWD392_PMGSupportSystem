@@ -150,22 +150,23 @@ namespace PMGSupportSystem.Services
             return false;
         }
 
-        private async Task SendNotificationEmailRound1Async(List<SubmissionDistribution> submissionDistributions, List<User> lecturers, List<User> users)
+        private async Task SendNotificationEmailRound1Async(List<SubmissionDistribution> submissionDistributions, List<User> lecturers, List<User> users, List<Submission> submissions)
         {
-            var lecturerExams = submissionDistributions
+            var lecturerAssignments = submissionDistributions
                 .Where(d => d.LecturerId.HasValue)
                 .GroupBy(d => d.LecturerId!.Value)
                 .ToDictionary(g => g.Key, g => g.ToList());
-            foreach (var lecturerId in lecturerExams.Keys)
+            foreach (var lecturerId in lecturerAssignments.Keys)
             {
                 var lecturer = lecturers.FirstOrDefault(l => l.Id == lecturerId);
                 if (lecturer != null)
                 {
-                    var exam = lecturerExams[lecturerId];
+                    var exam = lecturerAssignments[lecturerId];
                     var listStudents = string.Join("<br/>", exam.Select(e =>
                     {
-                        var student = users.FirstOrDefault(u => u.Id == e.Submission.StudentId);
-                        return $"- {student?.FullName} - {student?.Id}";
+                        var submission = submissions.FirstOrDefault(s => s.SubmissionId == e.SubmissionId);
+                        var student = users.FirstOrDefault(u => u.Id == submission?.StudentId);
+                        return $"- {student?.FullName} - {student?.Code}";
                     }));
 
                     var subject = "New Grading Assignments";
@@ -179,7 +180,7 @@ namespace PMGSupportSystem.Services
             }
         }
 
-        private async Task SendNotificationEmailRound2Async(List<GradeRound> gradeRounds, List<User> lecturers, List<User> users)
+        private async Task SendNotificationEmailRound2Async(List<GradeRound> gradeRounds, List<User> lecturers, List<User> users, List<Submission> submissions)
         {
             var lecturerGroups = gradeRounds.GroupBy(gr => gr.LecturerId);
 
@@ -190,9 +191,10 @@ namespace PMGSupportSystem.Services
 
                 var listStudents = string.Join("<br/>", group.Select(gr =>
                 {
-                    var student = users.FirstOrDefault(u => u.Id == gr.Submission.StudentId);
+                    var submission = submissions.FirstOrDefault(s => s.SubmissionId == gr.SubmissionId);
+                    var student = users.FirstOrDefault(u => u.Id == submission?.StudentId);
                     var colecturer = users.FirstOrDefault(u => u.Id == gr.CoLecturerId);
-                    return $"- {student?.FullName} ({student?.Id}), cùng với Co-Lecturer: {colecturer?.FullName}";
+                    return $"- {student?.FullName} ({student?.Code}), cùng với Co-Lecturer: {colecturer?.FullName}";
                 }));
 
                 var subject = "Re-grading Assignments (Round 2)";
@@ -230,7 +232,7 @@ namespace PMGSupportSystem.Services
                 var gradeRounds = new GradeRound
                 {
                     SubmissionId = submission.SubmissionId,
-                    RoundNumber = j,
+                    RoundNumber = 1,
                     LecturerId= lecturer.Id,
                     Note = "",
                     MeetingUrl = "",
@@ -243,7 +245,7 @@ namespace PMGSupportSystem.Services
             await _unitOfWork.GradeRoundRepository.AddRangeAsync(newGradeRounds);
             await _unitOfWork.SaveChangesAsync();
 
-            await SendNotificationEmailRound1Async(newDistributions, lecturers, users);
+            await SendNotificationEmailRound1Async(newDistributions, lecturers, users, submissions);
 
             return true;
         }
@@ -287,7 +289,7 @@ namespace PMGSupportSystem.Services
             }
             await _unitOfWork.SaveChangesAsync();
 
-            await SendNotificationEmailRound2Async(newGradeRounds, lecturers, users);
+            await SendNotificationEmailRound2Async(newGradeRounds, lecturers, users, submissions);
 
             return true;
         }
@@ -352,7 +354,7 @@ namespace PMGSupportSystem.Services
                 newGradeRounds.Add(gradeRound);
 
                 var subject = "Round 3 Meeting Scheduled";
-                var body = $"Dear {lecturer1.FullName}, {lecturer2.FullName} and {student.FullName},<br/>" +
+                var body = $"Dear {lecturer1.FullName}, {lecturer2.FullName} and {student.FullName} with StudentCode: {student.Code},<br/>" +
                            $"You are invited to join the round 3 meeting to review the submission.<br/>" +
                            $"Meeting link: <a href='{meetingUrl}'>{meetingUrl}</a><br/>" +
                            $"Scheduled at: {scheduleAt}";
