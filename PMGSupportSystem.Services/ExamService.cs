@@ -7,13 +7,13 @@ namespace PMGSupportSystem.Services
 {
     public interface IExamService
     {
-        Task<IEnumerable<Exam>> GetExamsAsync();
+        Task<IEnumerable<Exam>?> GetExamsAsync();
         Task<Exam?> GetExamByIdAsync(Guid id);
         Task<IEnumerable<Exam>?> SearchExamsAsync(Guid examinerId, DateTime uploadedAt, string status);
         Task CreateExamAsync(Exam exam);
         Task UpdateExamAsync(Exam exam);
         Task DeleteExamAsync(Exam exam);
-        Task<(IEnumerable<Exam> assignments, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status);
+        Task<(IEnumerable<Exam> exams, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status);
         Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt);
         Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt);
         Task<IEnumerable<Exam>> GetExamsByExaminerAsync(Guid examinerId);
@@ -45,12 +45,12 @@ namespace PMGSupportSystem.Services
             return await _unitOfWork.ExamRepository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<Exam>> GetExamsAsync()
+        public async Task<IEnumerable<Exam>?> GetExamsAsync()
         {
-            return await _unitOfWork.ExamRepository.GetAllAsync();
+            return await _unitOfWork.ExamRepository.GetExamsAsync();
         }
 
-        public async Task<(IEnumerable<Exam> assignments, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status)
+        public async Task<(IEnumerable<Exam> exams, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status)
         {
             Expression<Func<Exam, bool>>? filter = null;
 
@@ -68,7 +68,7 @@ namespace PMGSupportSystem.Services
 
         public async Task<IEnumerable<Exam>?> SearchExamsAsync(Guid examinerId, DateTime uploadedAt, string status)
         {
-            return await _unitOfWork.ExamRepository.SearchAssignmentsAsync(examinerId, uploadedAt, status);
+            return await _unitOfWork.ExamRepository.SearchExamsAsync(examinerId, uploadedAt, status);
         }
 
         public async Task UpdateExamAsync(Exam exam)
@@ -88,7 +88,7 @@ namespace PMGSupportSystem.Services
 
         public async Task<IEnumerable<Exam>> GetExamsByExaminerAsync(Guid examinerId)
         {
-            return await _unitOfWork.ExamRepository.GetAssignmentsByExaminerAsync(examinerId);
+            return await _unitOfWork.ExamRepository.GetExamsByExaminerAsync(examinerId);
         }
 
         public async Task<(IEnumerable<Exam> Items, int TotalCount)> GetPagedExamsAsync(int page, int pageSize, Guid? examinerId, DateTime? uploadedAt, string? status)
@@ -103,18 +103,18 @@ namespace PMGSupportSystem.Services
                     (string.IsNullOrEmpty(status) || x.Status == status);
             }
 
-            var assignments = await _unitOfWork.ExamRepository.GetPagedListAsync(
+            var exams = await _unitOfWork.ExamRepository.GetPagedListAsync(
                 page: page,
                 pageSize: pageSize,
                 filter: filter,
                 q => q.OrderBy(x => x.ExamId));
 
-            return assignments;
+            return exams;
         }
 
         public async Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id)
         {
-            return await _unitOfWork.ExamRepository.GetExamFilesByAssignmentIdAsync(id);
+            return await _unitOfWork.ExamRepository.GetExamFilesByExamIdAsync(id);
         }
 
         public async Task<bool> AutoAssignLecturersAsync(Guid assignedByUserId, Guid examId)

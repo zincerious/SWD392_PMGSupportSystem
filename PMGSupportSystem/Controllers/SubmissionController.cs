@@ -21,7 +21,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
         [Authorize(Roles = "Examiner")]
         [HttpPost("upload-submission/{assignmentId}")]
-        public async Task<IActionResult> UploadSubmission([FromRoute] Guid assignmentId, [FromForm] FileDTO dto)
+        public async Task<IActionResult> UploadSubmission([FromRoute] Guid examId, [FromForm] FileDTO dto)
         {
             if (dto.DTOFile == null || dto.DTOFile.Length == 0)
             {
@@ -42,7 +42,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Examiner not found.");
             }
 
-            var result = await _servicesProvider.SubmissionService.UploadSubmissionsAsync(assignmentId, dto.DTOFile, examinerId!.Value);
+            var result = await _servicesProvider.SubmissionService.UploadSubmissionsAsync(examId, dto.DTOFile, examinerId!.Value);
             if (!result)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to upload submissions.");
@@ -53,15 +53,15 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
         [Authorize(Roles = "Lecturer")]
         [HttpGet("download-submissions/{assignmentId}")]
-        public async Task<IActionResult> DownloadSubmissionsAsync([FromRoute] Guid assignmentId)
+        public async Task<IActionResult> DownloadSubmissionsAsync([FromRoute] Guid examId)
         {
-            if (assignmentId == Guid.Empty)
+            if (examId == Guid.Empty)
             {
                 return BadRequest("Empty assignment id.");
             }
 
-            var assignment = await _servicesProvider.ExamService.GetExamByIdAsync(assignmentId);
-            if (assignment == null)
+            var exam = await _servicesProvider.ExamService.GetExamByIdAsync(examId);
+            if (exam == null)
             {
                 return NotFound("Not found assignment.");
             }
@@ -74,7 +74,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
             Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
 
-            var distributions = await _servicesProvider.DistributionService.GetDistributionsByLecturerIdAndExamIdAsync(assignmentId, parseId);
+            var distributions = await _servicesProvider.DistributionService.GetDistributionsByLecturerIdAndExamIdAsync(examId, parseId);
             if (distributions == null || !distributions.Any())
             {
                 return NotFound("Not found distributions.");
@@ -86,7 +86,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 .Select(id => id!.Value)
                 .ToList();
 
-            var submissions = await _servicesProvider.SubmissionService.GetSubmissionsByExamAndStudentsAsync(assignmentId, studentIds);
+            var submissions = await _servicesProvider.SubmissionService.GetSubmissionsByExamAndStudentsAsync(examId, studentIds);
             if (submissions == null || !submissions.Any())
             {
                 return NotFound("Not found submissions.");
@@ -111,7 +111,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             }
 
             memoryStream.Position = 0;
-            var zipFileName = $"Submissions_{assignmentId}.zip";
+            var zipFileName = $"Submissions_{examId}.zip";
             return File(memoryStream.ToArray(), "application/zip", zipFileName);
         }
 

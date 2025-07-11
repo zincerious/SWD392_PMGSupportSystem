@@ -10,11 +10,11 @@ namespace PMGSupportSystem.Services
 {
     public interface ISubmissionService
     {
-        Task<bool> UploadSubmissionsAsync(Guid assignmentId, IFormFile zipFile, Guid examinerId);
-        Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid assignmentId);
-        Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId);
+        Task<bool> UploadSubmissionsAsync(Guid examtId, IFormFile zipFile, Guid examinerId);
+        Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId);
         Task<IEnumerable<Submission>?> GetSubmissionsAsync();
-        Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid assignmentId, IEnumerable<Guid> studentIds);
+        Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid examId, IEnumerable<Guid> studentIds);
+        Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId);
         Task<(IEnumerable<SubmissionDTO> Items, int TotalCount)> GetSubmissionTableAsync(int page, int pageSize);
     }
     public class SubmissionService : ISubmissionService
@@ -135,9 +135,9 @@ namespace PMGSupportSystem.Services
             return null;
         }
 
-        public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid assignmentId)
+        public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId)
         {
-            return await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(assignmentId);
+            return await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
         }
 
         public async Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId)
