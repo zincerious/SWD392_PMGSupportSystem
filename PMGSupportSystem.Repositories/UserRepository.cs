@@ -23,5 +23,10 @@ namespace PMGSupportSystem.Repositories
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
+
+        public async Task<User?> GetStudentByCodeAsync(string code)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Code.ToLower() == code.ToLower());
+        }
     }
 }
