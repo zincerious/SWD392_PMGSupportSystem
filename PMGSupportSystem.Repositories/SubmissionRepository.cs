@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using PMGSupportSystem.Repositories.Basics;
 using PMGSupportSystem.Repositories.DBContext;
 using PMGSupportSystem.Repositories.Models;
@@ -28,6 +29,27 @@ namespace PMGSupportSystem.Repositories
                 .Include(s => s.Student)
                 .ToListAsync();
         }
+
+        public async Task<(IEnumerable<Submission> Items, int TotalCount)> GetPagedSubmissionsAsync(int page, int pageSize)
+        {
+            var result = await GetPagedListAsync(
+                page,
+                pageSize,
+                filter: null,
+                orderBy: q => q.OrderByDescending(s => s.SubmittedAt)
+            );
+             
+            // Include student
+            var itemsWithStudent = result.Items
+                .Select(s => _context.Submissions
+                    .Include(x => x.Student)
+                    .FirstOrDefault(x => x.SubmissionId == s.SubmissionId))
+                .Where(x => x != null)
+                .ToList();
+
+            return (itemsWithStudent, result.TotalCount);
+        }
+
 
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId)
         {

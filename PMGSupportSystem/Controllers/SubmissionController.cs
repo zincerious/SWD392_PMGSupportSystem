@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMGSupportSystem.DTOs;
 using PMGSupportSystem.Repositories.Models;
@@ -115,7 +115,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             return File(memoryStream.ToArray(), "application/zip", zipFileName);
         }
 
-        //[Authorize(Roles = "Student")]
+        [Authorize(Roles = "Student")]
         [HttpGet("get-grades/{examId}")]
         public async Task<IActionResult> GetGradesAsync(Guid examId)
         {
@@ -137,5 +137,13 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
+        [Authorize(Roles = "DepartmentLeader")]
+        [HttpGet("submission-table")]
+        public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
+        {
+            var (items, total) = await _servicesProvider.SubmissionService.GetSubmissionTableAsync(page, pageSize);
+            return Ok(new { total, data = items });
+        }
+
     }
 }
