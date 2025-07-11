@@ -47,7 +47,7 @@ namespace PMGSupportSystem.Repositories
                 .Where(x => x != null)
                 .ToList();
 
-            return (itemsWithStudent, result.TotalCount);
+            return (itemsWithStudent!, result.TotalCount);
         }
 
 

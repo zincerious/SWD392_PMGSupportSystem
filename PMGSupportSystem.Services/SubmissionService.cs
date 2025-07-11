@@ -56,8 +56,8 @@ namespace PMGSupportSystem.Services
                     continue;
                 }
 
-                var (studentId, normalizedName) = info.Value;
-                var student = await _unitOfWork.UserRepository.GetByIdAsync(studentId);
+                var (studentCode, normalizedName) = info.Value;
+                var student = await _unitOfWork.UserRepository.GetStudentByCodeAsync(studentCode);
                 if (student == null)
                 {
                     continue;
@@ -126,8 +126,8 @@ namespace PMGSupportSystem.Services
             if (parts.Length >= 6)
             {
                 var studentName = parts[4];
-                var studentId = parts[5];
-                return (studentId, studentName.ToLowerInvariant());
+                var studentCode = parts[5];
+                return (studentCode, studentName.ToLowerInvariant());
             }
 
             return null;
