@@ -25,7 +25,7 @@ namespace PMGSupportSystem.Repositories
             return exams;
         }
 
-        public async Task<Exam?> GetAssignmentByIdAsync(Guid id)
+        public async Task<Exam?> GetExamByIdAsync(Guid id)
         {
             var exam = await _context.Exams
                 .Include(a => a.UploadByNavigation)
@@ -140,6 +140,7 @@ namespace PMGSupportSystem.Repositories
         public async Task<IEnumerable<Exam>> GetExamsByExaminerAsync(Guid examinerId)
         {
             return await _context.Exams
+                .Include(e => e.UploadByNavigation)
                 .Where(a => a.UploadBy == examinerId)
                 .OrderByDescending(a => a.UploadedAt)
                 .ToListAsync();
@@ -147,7 +148,7 @@ namespace PMGSupportSystem.Repositories
 
         public async Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id)
         {
-            var exam = await GetAssignmentByIdAsync(id);
+            var exam = await GetExamByIdAsync(id);
             if (exam == null || string.IsNullOrEmpty(exam.FilePath) || string.IsNullOrEmpty(exam.BaremFile))
             {
                 return (null, null);
@@ -209,7 +210,7 @@ namespace PMGSupportSystem.Repositories
 
         public async Task<string?> GetTextContentForAIAsync(Guid examId)
         {
-            var exam = await GetAssignmentByIdAsync(examId);
+            var exam = await GetExamByIdAsync(examId);
             if (exam == null || string.IsNullOrEmpty(exam.FilePath))
                 return null;
 
