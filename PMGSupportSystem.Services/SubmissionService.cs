@@ -178,7 +178,7 @@ namespace PMGSupportSystem.Services
                 {
                     SubmissionId = sub.SubmissionId.ToString(),
                     StudentId = student?.Code ?? "",
-                    ExamCode = exam?.FilePath ?? "",
+                    ExamCode = exam?.Semester ?? "",
                     Status = sub.Status,
                     AssignedLecturer = lecturer?.FullName ?? ""
                 };
