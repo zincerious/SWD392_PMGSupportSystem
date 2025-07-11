@@ -3,6 +3,7 @@ using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
 using System.IO.Compression;
 using System.Linq.Expressions;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
@@ -10,6 +11,7 @@ namespace PMGSupportSystem.Services
     {
         Task<bool> UploadSubmissionsAsync(Guid assignmentId, IFormFile zipFile, Guid examinerId);
         Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid assignmentId);
+        Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId);
         Task<IEnumerable<Submission>?> GetSubmissionsAsync();
         Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid assignmentId, IEnumerable<Guid> studentIds);
     }
@@ -134,6 +136,19 @@ namespace PMGSupportSystem.Services
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid assignmentId)
         {
             return await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(assignmentId);
+        }
+
+        public async Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId)
+        {
+            var submission = await _unitOfWork.SubmissionRepository.GetSubmissionByExamIdAsync(examId, studentId);
+            if (submission == null) return null;
+            var grade = new GradeDTO()
+            {
+                SubmissionId = submission.SubmissionId,
+                FinalScore = submission.FinalScore,
+                Status = submission.Status,
+            };
+            return grade;
         }
 
         public Task<IEnumerable<Submission>?> GetSubmissionsAsync()

@@ -5,6 +5,7 @@ using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services;
 using System.IO.Compression;
 using System.Security.Claims;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 {
@@ -112,6 +113,29 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             memoryStream.Position = 0;
             var zipFileName = $"Submissions_{assignmentId}.zip";
             return File(memoryStream.ToArray(), "application/zip", zipFileName);
+        }
+
+        //[Authorize(Roles = "Student")]
+        [HttpGet("get-grades/{examId}")]
+        public async Task<IActionResult> GetGradesAsync(Guid examId)
+        {
+            if (!ModelState.IsValid) return BadRequest();
+            var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(studentIdString, out var studentId))
+            {
+                return Unauthorized("Invalid or missing student ID.");
+            }
+
+            var student = await _servicesProvider.UserService.GetUserByIdAsync(studentId);
+            if (student == null)
+            {
+                return NotFound("Student not found.");
+            }
+
+            var grade = await _servicesProvider.SubmissionService.GetSubmissionByExamIdAsync(examId, studentId );
+            if (grade == null ||!grade.Status.Equals("Published"))
+                return NotFound("Grade not found.");
+            return Ok(grade);
         }
     }
 }
