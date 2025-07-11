@@ -3,8 +3,6 @@ using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services.DTO;
 using System.IO.Compression;
-using System.Linq.Expressions;
-using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
@@ -169,8 +167,8 @@ namespace PMGSupportSystem.Services
             var (submissions, totalCount) = await _unitOfWork.SubmissionRepository.GetPagedSubmissionsAsync(page, pageSize);
 
             // Get examIds, studentIds, submissionIds
-            var examIds = submissions.Select(s => s.ExamId).Where(id => id.HasValue).Select(id => id.Value).Distinct().ToList();
-            var studentIds = submissions.Select(s => s.StudentId).Where(id => id.HasValue).Select(id => id.Value).Distinct().ToList();
+            var examIds = submissions.Select(s => s.ExamId).Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
+            var studentIds = submissions.Select(s => s.StudentId).Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
             var submissionIds = submissions.Select(s => s.SubmissionId).ToList();
 
 
@@ -178,7 +176,7 @@ namespace PMGSupportSystem.Services
             var students = (await _unitOfWork.UserRepository.GetAllAsync()).Where(u => studentIds.Contains(u.Id)).ToList();
             var distributions = (await _unitOfWork.DistributionRepository.GetAllAsync())
                 .Where(d => submissionIds.Contains(d.SubmissionId ?? Guid.Empty)).ToList();
-            var lecturerIds = distributions.Where(d => d.LecturerId.HasValue).Select(d => d.LecturerId.Value).Distinct().ToList();
+            var lecturerIds = distributions.Where(d => d.LecturerId.HasValue).Select(d => d.LecturerId!.Value).Distinct().ToList();
             var lecturers = (await _unitOfWork.UserRepository.GetAllAsync()).Where(u => lecturerIds.Contains(u.Id)).ToList();
 
             // Mapping

@@ -20,7 +20,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         }
 
         [Authorize(Roles = "Examiner")]
-        [HttpPost("upload-submission/{assignmentId}")]
+        [HttpPost("upload-submission/{examId}")]
         public async Task<IActionResult> UploadSubmission([FromRoute] Guid examId, [FromForm] FileDTO dto)
         {
             if (dto.DTOFile == null || dto.DTOFile.Length == 0)
@@ -52,7 +52,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         }
 
         [Authorize(Roles = "Lecturer")]
-        [HttpGet("download-submissions/{assignmentId}")]
+        [HttpGet("download-submissions/{examId}")]
         public async Task<IActionResult> DownloadSubmissionsAsync([FromRoute] Guid examId)
         {
             if (examId == Guid.Empty)
