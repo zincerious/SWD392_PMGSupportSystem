@@ -20,7 +20,7 @@ namespace PMGSupportSystem.Controllers
         [HttpPost("create-request")]
         public async Task<IActionResult> CreateRequestAsync(RegradeRequestDto regradeRequestDto)
         {
-            var result = await _servicesProvider.RegradeRequestService.RequestRegradingAsync(regradeRequestDto.StudentCode, regradeRequestDto.Reason);
+            var result = await _servicesProvider.RegradeRequestService.RequestRegradingAsync(regradeRequestDto.StudentCode!, regradeRequestDto.Reason!);
             if (!result)
             {
                 return StatusCode(500, "Not found student or round > 2");
