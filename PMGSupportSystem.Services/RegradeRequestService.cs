@@ -5,7 +5,7 @@ namespace PMGSupportSystem.Services
 {
     public interface IRegradeRequestService
     {
-        Task<bool> RequestRegradingAsync(Guid submissionId, string studentCode, string studentName, string email, string reason);
+        Task<bool> RequestRegradingAsync(string studentCode, string reason);
     }
     public class RegradeRequestService : IRegradeRequestService
     {
@@ -15,28 +15,17 @@ namespace PMGSupportSystem.Services
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task<bool> RequestRegradingAsync(Guid submissionId, string studentCode, string studentName, string email, string reason)
+        public async Task<bool> RequestRegradingAsync(string studentCode, string reason)
         {
             var student = await _unitOfWork.UserRepository.GetStudentByCodeAsync(studentCode.ToUpper());
             if (student == null)
             {
-                Console.WriteLine("Wrong student code.");
+                Console.WriteLine("Student code does not exist !");
                 return false;
             }
 
-            if (student.FullName != studentName)
-            {
-                Console.WriteLine("Wrong name");
-                return false;
-            }
-
-            if (student.Email != email)
-            {
-                Console.WriteLine("Wrong email");
-                return false;
-            }
-
-            var regradeRequests = await _unitOfWork.RegradeRequestRepository.GetRegradeRequestsBySubmissionIdAsync(submissionId);
+            var submisison = await _unitOfWork.SubmissionRepository.GetSubmissionByStudentIdAsync(student.Id);
+            var regradeRequests = await _unitOfWork.RegradeRequestRepository.GetRegradeRequestsBySubmissionIdAsync(submisison.SubmissionId);
             var round = regradeRequests.Count() + 1;
             if (round > 2)
             {
@@ -45,7 +34,7 @@ namespace PMGSupportSystem.Services
 
             var request = new RegradeRequest
             {
-                SubmissionId = submissionId,
+                SubmissionId = submisison.SubmissionId,
                 StudentId = student.Id,
                 RequestRound = round,
                 Status = "Pending",
