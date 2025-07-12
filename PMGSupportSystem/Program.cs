@@ -80,6 +80,7 @@ namespace PMGSupportSystem
             builder.Services.AddScoped<ISubmissionService, SubmissionService>();
             builder.Services.AddScoped<IExamService, ExamService>();
             builder.Services.AddScoped<IDistributionService, DistributionService>();
+            builder.Services.AddScoped<IRegradeRequestService, RegradeRequestService>();
             builder.Services.AddScoped<IServicesProvider, ServicesProvider>();
 
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));

@@ -145,6 +145,7 @@ public partial class SU25_SWD392Context : DbContext
             entity.Property(e => e.StudentId).HasColumnName("studentId");
             entity.Property(e => e.SubmissionId).HasColumnName("submissionId");
             entity.Property(e => e.UpdatedBy).HasColumnName("updatedBy");
+            entity.Property(e => e.Reason).HasColumnName("Reason");
 
             entity.HasOne(d => d.Examiner).WithMany(p => p.RegradeRequestExaminers)
                 .HasForeignKey(d => d.ExaminerId)
