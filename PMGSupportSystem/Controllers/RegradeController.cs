@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PMGSupportSystem.Services;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Controllers
 {
@@ -16,10 +17,10 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Student")]
-        [HttpPost("create-request/{submissionId}")]
-        public async Task<IActionResult> CreateRequestAsync([FromRoute] Guid submissionId, string studentCode, string studentName, string studentEmail, string reason)
+        [HttpPost("create-request")]
+        public async Task<IActionResult> CreateRequestAsync(RegradeRequestDto regradeRequestDto)
         {
-            var result = await _servicesProvider.RegradeRequestService.RequestRegradingAsync(submissionId, studentCode, studentName, studentEmail, reason);
+            var result = await _servicesProvider.RegradeRequestService.RequestRegradingAsync(regradeRequestDto.StudentCode, regradeRequestDto.Reason);
             if (!result)
             {
                 return StatusCode(500, "Not found student or round > 2");
