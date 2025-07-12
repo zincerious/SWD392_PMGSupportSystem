@@ -123,10 +123,10 @@ namespace PMGSupportSystem.Services
             var rounds = await _unitOfWork.GradeRoundRepository.GetByExamIdAsync(examId);
             var users = await _unitOfWork.UserRepository.GetAllAsync();
             var lecturers = users.Where(u => u.Role == "Lecturer").ToList();
-
+            bool result = false;
             if (!rounds.Any(gr => gr.RoundNumber == 1))
             {
-                return await AutoAssignRound1Async(assignedByUserId, examId, submissions!.ToList(), lecturers, users.ToList());
+                result = await AutoAssignRound1Async(assignedByUserId, examId, submissions!.ToList(), lecturers, users.ToList());
             }
             else if (!rounds.Any(gr => gr.RoundNumber == 2))
             {
@@ -134,7 +134,7 @@ namespace PMGSupportSystem.Services
                     .GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 2);
                 if (approvedRegradeRequests.Any())
                 {
-                    return await AutoAssignRound2Async(assignedByUserId, examId, submissions!.ToList(), lecturers, users.ToList());
+                    result = await AutoAssignRound2Async(assignedByUserId, examId, submissions!.ToList(), lecturers, users.ToList());
                 }
             }
             else if (!rounds.Any(gr => gr.RoundNumber == 3))
@@ -143,11 +143,21 @@ namespace PMGSupportSystem.Services
                     .GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 3);
                 if (approvedRegradeRequests.Any())
                 {
-                    return await AutoAssignRound3Async(assignedByUserId, examId);
+                    result = await AutoAssignRound3Async(assignedByUserId, examId);
                 }
             }
 
-            return false;
+            if (result && submissions != null)
+            {
+                foreach (var submission in submissions)
+                {
+                    submission.Status = "Assigned";
+                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                }
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return result;
         }
 
         private async Task SendNotificationEmailRound1Async(List<SubmissionDistribution> submissionDistributions, List<User> lecturers, List<User> users, List<Submission> submissions)
@@ -224,7 +234,7 @@ namespace PMGSupportSystem.Services
                     AssignedAt = now,
                     UpdatedAt = now,
                     Deadline = now.AddDays(7),
-                    Status = "Assigned"
+                    Status = "InProgress"
                 };
 
                 newDistributions.Add(assignmentDistribution);
