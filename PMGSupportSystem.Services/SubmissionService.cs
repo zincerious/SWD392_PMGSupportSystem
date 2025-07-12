@@ -178,24 +178,36 @@ namespace PMGSupportSystem.Services
                 .Where(d => submissionIds.Contains(d.SubmissionId ?? Guid.Empty)).ToList();
             var lecturerIds = distributions.Where(d => d.LecturerId.HasValue).Select(d => d.LecturerId!.Value).Distinct().ToList();
             var lecturers = (await _unitOfWork.UserRepository.GetAllAsync()).Where(u => lecturerIds.Contains(u.Id)).ToList();
+            var gradeRounds = await _unitOfWork.GradeRoundRepository.GetAllAsync();
 
-            // Mapping
-            var result = submissions.Select(sub =>
+            var result = new List<SubmissionDTO>();
+            // Get submission in each round
+            foreach (var sub in submissions)
             {
-                var exam = exams.FirstOrDefault(e => e.ExamId == sub.ExamId);
-                var student = students.FirstOrDefault(u => u.Id == sub.StudentId);
-                var distribution = distributions.FirstOrDefault(d => d.SubmissionId == sub.SubmissionId);
-                var lecturer = distribution != null ? lecturers.FirstOrDefault(l => l.Id == distribution.LecturerId) : null;
+                var exam = exams.Find(e => e.ExamId == sub.ExamId);
+                var student = students.Find(u => u.Id == sub.StudentId);
+                var distribution = distributions.Find(d => d.SubmissionId == sub.SubmissionId);
+                var lecturer = distribution != null ? lecturers.Find(l => l.Id == distribution.LecturerId) : null;
 
-                return new SubmissionDTO
+                // Get submission in each round
+                foreach (var round in gradeRounds)
                 {
-                    SubmissionId = sub.SubmissionId.ToString(),
-                    StudentId = student?.Code ?? "",
-                    ExamCode = exam?.Semester ?? "",
-                    Status = sub.Status,
-                    AssignedLecturer = lecturer?.FullName ?? ""
-                };
-            }).ToList();
+                    if (round.SubmissionId == sub.SubmissionId)
+                    {
+                        var dto = new SubmissionDTO
+                        {
+                            SubmissionId = sub.SubmissionId.ToString(),
+                            StudentCode = student?.Code ?? "",
+                            ExamId = exam?.ExamId.ToString() ?? "",
+                            ExamCode = exam?.Semester ?? "",
+                            Round = round.RoundNumber ?? null,
+                            Status = sub.Status,
+                            AssignedLecturer = lecturer?.FullName ?? ""
+                        };
+                        result.Add(dto);
+                    }
+                }
+            }
 
             return (result, totalCount);
         }
