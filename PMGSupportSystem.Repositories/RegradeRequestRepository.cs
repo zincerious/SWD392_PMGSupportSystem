@@ -21,5 +21,12 @@ namespace PMGSupportSystem.Repositories
                 .Where(rr => rr.Submission.ExamId == examId && rr.RequestRound == requestRound)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<RegradeRequest>> GetRegradeRequestsBySubmissionIdAsync(Guid submissionId)
+        {
+            return await _context.RegradeRequests.Include(rr => rr.Submission)
+                .Where(rr => rr.SubmissionId == submissionId)
+                .ToListAsync();
+        }
     }
 }
