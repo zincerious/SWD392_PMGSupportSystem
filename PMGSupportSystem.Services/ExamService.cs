@@ -14,7 +14,7 @@ namespace PMGSupportSystem.Services
         Task UpdateExamAsync(Exam exam);
         Task DeleteExamAsync(Exam exam);
         Task<(IEnumerable<Exam> exams, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status);
-        Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt);
+        Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester);
         Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt);
         Task<IEnumerable<Exam>> GetExamsByExaminerAsync(Guid examinerId);
         Task<(IEnumerable<Exam> Items, int TotalCount)> GetPagedExamsAsync(int page, int pageSize, Guid? examinerId, DateTime? uploadedAt, string? status);
@@ -76,9 +76,9 @@ namespace PMGSupportSystem.Services
             await _unitOfWork.ExamRepository.UpdateAsync(exam);
         }
 
-        public async Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt)
+        public async Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester)
         {
-            return await _unitOfWork.ExamRepository.UploadExamPaperAsync(examinerId, file, uploadedAt);
+            return await _unitOfWork.ExamRepository.UploadExamPaperAsync(examinerId, file, uploadedAt, semester);
         }
 
         public async Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt)

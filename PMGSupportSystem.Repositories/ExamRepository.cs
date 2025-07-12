@@ -43,7 +43,7 @@ namespace PMGSupportSystem.Repositories
             return exams;
         }
 
-        public async Task<bool> UploadBaremAsync(Guid assignmentId, Guid examinerId, IFormFile file, DateTime uploadedAt)
+        public async Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace PMGSupportSystem.Repositories
                 {
                     await file.CopyToAsync(stream);
                 }
-                var exam = await GetByIdAsync(assignmentId);
+                var exam = await GetByIdAsync(examId);
                 if (exam == null)
                 {
                     return false;
@@ -94,12 +94,18 @@ namespace PMGSupportSystem.Repositories
             return result.ToString();
         }
 
-        public async Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt)
+        public async Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester)
         {
             try
             {
                 var extension = Path.GetExtension(file.FileName).ToLower();
                 if (extension != ".jpg" && extension != ".png")
+                {
+                    return false;
+                }
+                
+                var examByCode = await _context.Exams.FirstOrDefaultAsync(e => e.Semester == semester);
+                if (examByCode != null)
                 {
                     return false;
                 }
@@ -123,7 +129,7 @@ namespace PMGSupportSystem.Repositories
                     FilePath = filePath,
                     UploadBy = examinerId,
                     UploadedAt = DateTime.Now,
-                    Semester = GetCurrentSemesterCode(),
+                    Semester = semester,
                     BaremFile = "",
                     Status = "Uploaded"
                 };
@@ -155,23 +161,7 @@ namespace PMGSupportSystem.Repositories
             }
 
             return (exam.FilePath, exam.BaremFile);
-        }
-
-        private string GetCurrentSemesterCode()
-        {
-            var now = DateTime.Now;
-            int month = now.Month;
-            int year = now.Year % 100;
-
-            string prefix = month switch
-            {
-                >= 1 and <= 4 => "SP",
-                >= 5 and <= 8 => "SU",
-                _ => "FA"
-            };
-
-            return $"{prefix}{year:D2}";
-        }
+        } 
 
         //trich xuat image => text
         public string ExtractTextFromImage(string imagePath)
