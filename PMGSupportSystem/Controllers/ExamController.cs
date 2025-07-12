@@ -21,7 +21,7 @@ namespace PMGSupportSystem.Controllers
 
         [Authorize(Roles = "Examiner")]
         [HttpPost("upload-exam-paper")]
-        public async Task<IActionResult> UploadExamPaper([FromForm] FileDTO uploadExamPaperDTO)
+        public async Task<IActionResult> UploadExamPaper([FromForm] FileDTO uploadExamPaperDTO, [FromForm] string semester)
         {
             if (uploadExamPaperDTO.DTOFile == null || uploadExamPaperDTO.DTOFile.Length == 0)
             {
@@ -36,7 +36,7 @@ namespace PMGSupportSystem.Controllers
             Guid? examinerId = Guid.TryParse(examinerIdString, out var parseId) ? parseId : null;
 
             var uploadedAt = DateTime.Now;
-            var result = await _servicesProvider.ExamService.UploadExamPaperAsync(parseId, uploadExamPaperDTO.DTOFile, uploadedAt);
+            var result = await _servicesProvider.ExamService.UploadExamPaperAsync(parseId, uploadExamPaperDTO.DTOFile, uploadedAt, semester);
 
             if (!result)
             {

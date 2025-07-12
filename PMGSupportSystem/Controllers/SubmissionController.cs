@@ -137,7 +137,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
-        [Authorize(Roles = "DepartmentLeader")]
+        [Authorize(Roles = "DepartmentLeader, Examiner")]
         [HttpGet("submission-table")]
         public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
         {
