@@ -200,6 +200,8 @@ namespace PMGSupportSystem.Services
                             StudentCode = student?.Code ?? "",
                             ExamId = exam?.ExamId.ToString() ?? "",
                             ExamCode = exam?.Semester ?? "",
+                            AiScore = sub.AiScore,
+                            FinalScore = sub.FinalScore,
                             Round = round.RoundNumber ?? null,
                             Status = sub.Status,
                             AssignedLecturer = lecturer?.FullName ?? ""
