@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PMGSupportSystem.DTOs;
+using PMGSupportSystem.Services.DTO;
 using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services;
 using System.IO.Compression;

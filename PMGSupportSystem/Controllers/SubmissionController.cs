@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PMGSupportSystem.DTOs;
-using PMGSupportSystem.Repositories.Models;
+using PMGSupportSystem.Services.DTO;
 using PMGSupportSystem.Services;
 using System.IO.Compression;
 using System.Security.Claims;
-using PMGSupportSystem.Services.DTO;
 
 namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 {

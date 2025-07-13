@@ -1,7 +1,6 @@
-﻿using Google.Apis.Auth;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PMGSupportSystem.DTOs;
+using PMGSupportSystem.Services.DTO;
 using PMGSupportSystem.Services;
 
 namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
@@ -31,7 +30,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("logout")]
+        [HttpPost("logout")]
         public IActionResult Logout()
         {
             var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
