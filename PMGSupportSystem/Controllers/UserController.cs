@@ -29,7 +29,22 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             return Ok(jwt);
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
+        [HttpPut("update-user/{userId}")]
+        public async Task<IActionResult> ToggleUserStatus([FromRoute] Guid userId)
+        {
+            var user = await _servicesProvider.UserService.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound($"User with ID {userId} not found.");
+            }
+
+            user.Status = !(user.Status ?? false);
+            await _servicesProvider.UserService.UpdateUserAsync(user);
+            return Ok(new { Message = "Update status successfully", UserAfterUpdate = user });
+        }
+
+            [Authorize]
         [HttpPost("logout")]
         public IActionResult Logout()
         {
