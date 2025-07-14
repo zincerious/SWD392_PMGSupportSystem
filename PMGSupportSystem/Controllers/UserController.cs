@@ -44,7 +44,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             return Ok(new { Message = "Update status successfully", UserAfterUpdate = user });
         }
 
-            [Authorize]
+        [Authorize]
         [HttpPost("logout")]
         public IActionResult Logout()
         {
@@ -66,6 +66,18 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 var importedUsers = await _servicesProvider.UserService.ImportUsersFromExcelAsync(stream);
                 return Ok(new { Message = "Users imported successfully!", Count = importedUsers.Count() });
             }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("get-users")]
+        public async Task<IActionResult> GetUsersAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var paginatedUsers = await _servicesProvider.UserService.GetPaginatedUsersAsync(page, pageSize);
+            return Ok(new
+            {
+                Items = paginatedUsers.Items,
+                TotalCount = paginatedUsers.TotalCount
+            });
         }
     }
 }
