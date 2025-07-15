@@ -76,13 +76,7 @@ namespace PMGSupportSystem
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IEmailService, EmailService>();
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<ISubmissionService, SubmissionService>();
-            builder.Services.AddScoped<IExamService, ExamService>();
-            builder.Services.AddScoped<IDistributionService, DistributionService>();
-            builder.Services.AddScoped<IRegradeRequestService, RegradeRequestService>();
             builder.Services.AddScoped<IServicesProvider, ServicesProvider>();
-            builder.Services.AddScoped<IGradeRoundService, GradeRoundService>();
 
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
             builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
