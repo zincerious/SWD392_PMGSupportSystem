@@ -26,8 +26,8 @@ namespace PMGSupportSystem.Services
 
             var submisison = await _unitOfWork.SubmissionRepository.GetSubmissionByStudentIdAsync(student.Id);
             var regradeRequests = await _unitOfWork.RegradeRequestRepository.GetRegradeRequestsBySubmissionIdAsync(submisison!.SubmissionId);
-            var round = regradeRequests.Count() + 1;
-            if (round > 2)
+            var round = regradeRequests.Count() + 2;
+            if (round > 3)
             {
                 return false;
             }
