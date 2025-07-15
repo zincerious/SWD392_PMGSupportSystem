@@ -186,7 +186,7 @@ namespace PMGSupportSystem.Services
                 .ToList();
             if (submissionsToAssignRound3.Any())
             {
-                result = await AutoAssignRound3Async(assignedByUserId, examId, submissionsToAssignRound3) || result;
+                result = await AutoAssignRound3Async(assignedByUserId, examId, submissionsToAssignRound3!) || result;
             }
 
             return result;
