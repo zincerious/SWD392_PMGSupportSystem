@@ -35,21 +35,11 @@ namespace PMGSupportSystem.Repositories
             var result = await GetPagedListAsync(
                 page,
                 pageSize,
-                filter: null,
-                orderBy: q => q.OrderByDescending(s => s.SubmittedAt)
+                include: q => q.Include(x => x.Student),
+                orderBy: q => q.OrderByDescending(x => x.SubmittedAt)
             );
-             
-            // Include student
-            var itemsWithStudent = result.Items
-                .Select(s => _context.Submissions
-                    .Include(x => x.Student)
-                    .FirstOrDefault(x => x.SubmissionId == s.SubmissionId))
-                .Where(x => x != null)
-                .ToList();
-
-            return (itemsWithStudent!, result.TotalCount);
+            return (result.Items, result.TotalCount);
         }
-
 
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId)
         {
