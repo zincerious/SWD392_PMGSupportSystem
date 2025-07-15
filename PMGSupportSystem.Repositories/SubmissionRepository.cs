@@ -22,7 +22,10 @@ namespace PMGSupportSystem.Repositories
                 .Include(a => a.Student)
                 .FirstOrDefaultAsync(a => a.StudentId == studentId);
         }
-
+        public async Task<List<Submission>?> GetAllSubmissionByStudentIdAsync(Guid studentId)
+        {
+            return await _context.Submissions.Where(a => a.StudentId == studentId).ToListAsync();
+        }
         public async Task<IEnumerable<Submission>?> GetSubmissionsAsync()
         {
             return await _context.Submissions

@@ -9,6 +9,7 @@ namespace PMGSupportSystem.Services
     {
         Task<IEnumerable<Exam>?> GetExamsAsync();
         Task<Exam?> GetExamByIdAsync(Guid id);
+        Task<List<Exam>?> GetAllExamByStudentIdAsync(Guid studentId);
         Task<IEnumerable<Exam>?> SearchExamsAsync(Guid examinerId, DateTime uploadedAt, string status);
         Task CreateExamAsync(Exam exam);
         Task UpdateExamAsync(Exam exam);
@@ -43,6 +44,33 @@ namespace PMGSupportSystem.Services
         public async Task<Exam?> GetExamByIdAsync(Guid id)
         {
             return await _unitOfWork.ExamRepository.GetByIdAsync(id);
+        }
+
+        public async Task<List<Exam>?> GetAllExamByStudentIdAsync(Guid studentId)
+        {
+            var submissions = await _unitOfWork.SubmissionRepository.GetAllSubmissionByStudentIdAsync(studentId);
+            if (submissions == null || !submissions.Any())
+                return new List<Exam>();
+
+            // Get list examIds
+            var examIds = submissions
+                .Where(s => s.ExamId.HasValue)
+                .Select(s => s.ExamId.Value)
+                .Distinct()
+                .ToList();
+
+            if (!examIds.Any())
+                return new List<Exam>();
+
+            // Filter exams by examIds
+            var allExams = await _unitOfWork.ExamRepository.GetExamsAsync();
+            if (allExams == null)
+                return new List<Exam>();
+
+            var exams = allExams.Where(e => examIds.Contains(e.ExamId)).OrderByDescending(e => e.UploadedAt) .ToList();
+
+            return exams;
+
         }
 
         public async Task<IEnumerable<Exam>?> GetExamsAsync()

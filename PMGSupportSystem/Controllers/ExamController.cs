@@ -178,5 +178,17 @@ namespace PMGSupportSystem.Controllers
 
             return Ok("Lecturers assigned successfully!");
         }
+
+        [Authorize(Roles = "Student")]
+        [HttpGet("student-exams")]
+        public async Task<IActionResult> GetExamsByStudent()
+        {
+            var studentIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(studentIdString, out var studentId))
+                return Unauthorized("Invalid or missing student ID.");
+
+            var exams = await _servicesProvider.ExamService.GetAllExamByStudentIdAsync(studentId);
+            return Ok(exams ?? new List<PMGSupportSystem.Repositories.Models.Exam>());
+        }
     }
 }

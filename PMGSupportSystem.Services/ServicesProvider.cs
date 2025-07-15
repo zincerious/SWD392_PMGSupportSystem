@@ -9,6 +9,7 @@ namespace PMGSupportSystem.Services
         IExamService ExamService { get; }
         IDistributionService DistributionService { get; }
         IRegradeRequestService RegradeRequestService { get; }
+        IGradeRoundService GradeRoundService { get; }
     }
     public class ServicesProvider : IServicesProvider
     {
@@ -24,5 +25,6 @@ namespace PMGSupportSystem.Services
         public IExamService ExamService => _serviceProvider.GetRequiredService<IExamService>();
         public IDistributionService DistributionService => _serviceProvider.GetRequiredService<IDistributionService>();
         public IRegradeRequestService RegradeRequestService => _serviceProvider.GetRequiredService<IRegradeRequestService>();
+        public IGradeRoundService GradeRoundService => _serviceProvider.GetRequiredService<IGradeRoundService>();
     }
 }
