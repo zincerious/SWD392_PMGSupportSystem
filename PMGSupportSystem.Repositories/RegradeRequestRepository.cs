@@ -28,5 +28,10 @@ namespace PMGSupportSystem.Repositories
                 .Where(rr => rr.SubmissionId == submissionId)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId)
+        {
+            return await _context.RegradeRequests.Where(rr => rr.StudentId == studentId).ToListAsync();
+        }
     }
 }

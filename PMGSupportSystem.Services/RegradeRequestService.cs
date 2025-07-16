@@ -1,11 +1,14 @@
 ﻿using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
     public interface IRegradeRequestService
     {
         Task<bool> RequestRegradingAsync(string studentCode, string reason);
+        Task<bool> ConfirmRequestRegradingAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto);
+        Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId);
     }
     public class RegradeRequestService : IRegradeRequestService
     {
@@ -46,5 +49,47 @@ namespace PMGSupportSystem.Services
 
             return true;
         }
+
+        public async Task<bool> ConfirmRequestRegradingAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto)
+        {
+            var regradeRequest = await _unitOfWork.RegradeRequestRepository.GetByIdAsync(updateStatusRegradeRequestDto.RegradeRequestId);
+            if (regradeRequest == null) return false;
+
+            if (updateStatusRegradeRequestDto.Status == "Rejected")
+            {
+                regradeRequest.Status = updateStatusRegradeRequestDto.Status;
+                regradeRequest.UpdatedBy = updateStatusRegradeRequestDto.UpdatedBy;
+
+            }
+            else if (updateStatusRegradeRequestDto.Status == "Approved")
+            {
+                regradeRequest.Status = updateStatusRegradeRequestDto.Status;
+                regradeRequest.UpdatedBy = updateStatusRegradeRequestDto.UpdatedBy;
+                if (regradeRequest.SubmissionId.HasValue)
+                {
+                    // Update status submission
+                    var submission = await _unitOfWork.SubmissionRepository.GetByIdAsync(regradeRequest.SubmissionId.Value);
+                    if (submission == null) return false;
+                    submission.Status = "Regrade";
+
+                    //Update status exam distribution
+                    var distribution = await _unitOfWork.DistributionRepository.GetDistributionsBySubmissionIdAsync(regradeRequest.SubmissionId.Value);
+                    if (distribution == null) return false;
+                    distribution.Status = "InProgress";
+                    distribution.LecturerId = null;
+                    
+                    await _unitOfWork.DistributionRepository.UpdateAsync(distribution);
+                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                }
+            }
+            await _unitOfWork.RegradeRequestRepository.UpdateAsync(regradeRequest);
+            return true;
+        }
+
+        public async Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId)
+        {
+            return await _unitOfWork.RegradeRequestRepository.GetRegradeRequestsByStudentIdAsync(studentId);
+        }
+
     }
 }

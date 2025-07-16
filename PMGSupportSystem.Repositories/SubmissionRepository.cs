@@ -66,7 +66,7 @@ namespace PMGSupportSystem.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Submission?> GetSubmissionByIdAsync(Guid id)
+        public async Task<Submission?> GetSubmissionByIdAsync(Guid? id)
         {
             return await _context.Submissions
                 .Include(s => s.Student)
