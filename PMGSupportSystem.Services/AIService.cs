@@ -29,10 +29,11 @@ public class AIService : IAIService
         var examText = await File.ReadAllTextAsync(exam.FilePath);
         var baremText = await File.ReadAllTextAsync(exam.BaremFile);
         
-        var prompt = $"Chấm điểm bài luận sau dựa trên đề và barem. Trả về duy nhất số điểm dạng x.x/10\n\n"
-                     + $"Đề bài:\n{examText}\n\n"
-                     + $"Đáp án (barem):\n{baremText}\n\n"
-                     + $"Bài làm:\n{submissionText}";
+        var prompt = $"Grade the following essay based on the exam question and the scoring rubric. " +
+                     $"Only return a single score in the format x.x/10 — no explanations or comments.\n\n" +
+                     $"Exam question:\n{examText}\n\n" +
+                     $"Scoring rubric:\n{baremText}\n\n" +
+                     $"Student's essay:\n{submissionText}";
         var aiScore = new
         {
             model = "mistral",
