@@ -81,6 +81,7 @@ namespace PMGSupportSystem
             builder.Services.AddScoped<IExamService, ExamService>();
             builder.Services.AddScoped<IDistributionService, DistributionService>();
             builder.Services.AddScoped<IServicesProvider, ServicesProvider>();
+            builder.Services.AddScoped<IAIService, AIService>();
 
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
             builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
@@ -89,6 +90,7 @@ namespace PMGSupportSystem
             builder.Services.AddSingleton<JwtHelper>();
 
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddHttpClient();
 
             builder.Services.AddAuthentication(options =>
             {

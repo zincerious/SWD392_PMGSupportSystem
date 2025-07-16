@@ -8,6 +8,7 @@ namespace PMGSupportSystem.Services
         ISubmissionService SubmissionService { get; }
         IExamService ExamService { get; }
         IDistributionService DistributionService { get; }
+        IAIService AIService { get; }
     }
     public class ServicesProvider : IServicesProvider
     {
@@ -22,5 +23,6 @@ namespace PMGSupportSystem.Services
         public ISubmissionService SubmissionService => _serviceProvider.GetRequiredService<ISubmissionService>();
         public IExamService ExamService => _serviceProvider.GetRequiredService<IExamService>();
         public IDistributionService DistributionService => _serviceProvider.GetRequiredService<IDistributionService>();
+        public IAIService AIService  => _serviceProvider.GetRequiredService<IAIService>();
     }
 }

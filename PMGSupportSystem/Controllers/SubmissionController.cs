@@ -146,5 +146,16 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             return Ok(new { total, data = items });
         }
         
+        [HttpPost("AI-Score")]
+        public async Task<IActionResult> GradeWithAI([FromBody] Guid submissionId)
+        {
+            var score = await _servicesProvider.AIService.GradeSubmissionAsync(submissionId);
+            if (score == null)
+            {
+                return NotFound("Submission or exam not found, or AI error.");
+            }
+            return Ok(new { aiScore = score });
+        }
+        
     }
 }
