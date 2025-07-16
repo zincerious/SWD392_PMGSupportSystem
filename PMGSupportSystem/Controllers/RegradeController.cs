@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PMGSupportSystem.Services;
 using PMGSupportSystem.Services.DTO;
+using System.Security.Claims;
 
 namespace PMGSupportSystem.Controllers
 {
@@ -26,6 +27,24 @@ namespace PMGSupportSystem.Controllers
                 return StatusCode(500, "Not found student or round > 2");
             }
             return Ok("Create successfully");
+        }
+
+        [Authorize(Roles = "Examiner")]
+        [HttpPost("confirm-request")]
+        public async Task<IActionResult> ConfirmRequestAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto)
+        {
+            var examinerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(examinerIdString, out var examinerId))
+            {
+                return Unauthorized("Invalid or missing student ID.");
+            }
+            updateStatusRegradeRequestDto.UpdatedBy = examinerId;
+            var result = await _servicesProvider.RegradeRequestService.ConfirmRequestRegradingAsync(updateStatusRegradeRequestDto);
+            if (!result)
+            {
+                return StatusCode(500, "Not found regrade request");
+            }
+            return Ok("Update successfully");
         }
     }
 }
