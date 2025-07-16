@@ -145,7 +145,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             var (items, total) = await _servicesProvider.SubmissionService.GetSubmissionTableAsync(page, pageSize);
             return Ok(new { total, data = items });
         }
-        
+        [Authorize(Roles = "Lecturer")]
         [HttpPost("AI-Score")]
         public async Task<IActionResult> GradeWithAI([FromBody] Guid submissionId)
         {
