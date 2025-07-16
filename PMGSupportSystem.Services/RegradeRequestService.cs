@@ -8,6 +8,7 @@ namespace PMGSupportSystem.Services
     {
         Task<bool> RequestRegradingAsync(string studentCode, string reason);
         Task<bool> ConfirmRequestRegradingAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto);
+        Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId);
     }
     public class RegradeRequestService : IRegradeRequestService
     {
@@ -83,6 +84,11 @@ namespace PMGSupportSystem.Services
             }
             await _unitOfWork.RegradeRequestRepository.UpdateAsync(regradeRequest);
             return true;
+        }
+
+        public async Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId)
+        {
+            return await _unitOfWork.RegradeRequestRepository.GetRegradeRequestsByStudentIdAsync(studentId);
         }
 
     }

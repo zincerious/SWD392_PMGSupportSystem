@@ -36,7 +36,7 @@ namespace PMGSupportSystem.Controllers
             var examinerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(examinerIdString, out var examinerId))
             {
-                return Unauthorized("Invalid or missing student ID.");
+                return Unauthorized("Invalid or missing examiner ID.");
             }
             updateStatusRegradeRequestDto.UpdatedBy = examinerId;
             var result = await _servicesProvider.RegradeRequestService.ConfirmRequestRegradingAsync(updateStatusRegradeRequestDto);
@@ -45,6 +45,23 @@ namespace PMGSupportSystem.Controllers
                 return StatusCode(500, "Not found regrade request");
             }
             return Ok("Update successfully");
+        }
+
+        [Authorize(Roles = "Student")]
+        [HttpPost("view-request")]
+        public async Task<IActionResult> GetRegradeRequestsByStudentIddAsync()
+        {
+            var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(studentIdString, out var studentId))
+            {
+                return Unauthorized("Invalid or missing student ID.");
+            }
+            var regradeRequests = await _servicesProvider.RegradeRequestService.GetRegradeRequestsByStudentIdAsync(studentId);
+            if (regradeRequests == null || !regradeRequests.Any())
+            {
+                return NotFound("No regrade requests found for the specified exam and round.");
+            }
+            return Ok(regradeRequests);
         }
     }
 }
