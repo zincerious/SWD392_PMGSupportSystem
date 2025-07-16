@@ -3,7 +3,7 @@ using PMGSupportSystem.Repositories.DBContext;
 
 namespace PMGSupportSystem.Repositories
 {
-    public interface IUnitOfWork
+    public interface IUnitOfWork : IDisposable
     {
         UserRepository UserRepository { get; }
         SubmissionRepository SubmissionRepository { get; }
@@ -13,7 +13,6 @@ namespace PMGSupportSystem.Repositories
         RegradeRequestRepository RegradeRequestRepository { get; }
         JwtHelper JwtHelper { get; }
         Task<int> SaveChangesAsync();
-        Task Dispose();
     }
     public class UnitOfWork : IUnitOfWork
     {
@@ -96,9 +95,6 @@ namespace PMGSupportSystem.Repositories
             return result;
         }
 
-        public async Task Dispose()
-        {
-            await _context.DisposeAsync();
-        }
+        void IDisposable.Dispose() => _context.Dispose();
     }
 }
