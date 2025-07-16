@@ -14,6 +14,8 @@ namespace PMGSupportSystem.Services
         Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid examId, IEnumerable<Guid> studentIds);
         Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId);
         Task<(IEnumerable<SubmissionDTO> Items, int TotalCount)> GetSubmissionTableAsync(int page, int pageSize);
+        Task<bool> UpdateSubmissionAsync(Submission submission);
+        Task<Submission?> GetSubmissionByIdAsync(Guid submissionId);
     }
     public class SubmissionService : ISubmissionService
     {
@@ -122,7 +124,7 @@ namespace PMGSupportSystem.Services
         {
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
             var parts = nameWithoutExtension.Split('_');
-            
+
             if (parts.Length >= 6)
             {
                 var studentName = parts[4];
@@ -200,6 +202,29 @@ namespace PMGSupportSystem.Services
             return (result, totalCount);
         }
 
+        public async Task<bool> UpdateSubmissionAsync(Submission submission)
+        {
+            try
+            {
+                // Ensure you're using the UnitOfWork context to update the submission
+                await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                await _unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for better debugging
+                Console.WriteLine($"Error updating submission: {ex.Message}");
+                return false;
+            }
+        }
 
+        
+        public async Task<Submission?> GetSubmissionByIdAsync(Guid submissionId)
+        {
+            return await _unitOfWork.SubmissionRepository.GetSubmissionByIdAsync(submissionId);
+        }
+
+        
     }
 }
