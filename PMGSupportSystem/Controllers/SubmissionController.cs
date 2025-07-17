@@ -4,6 +4,7 @@ using PMGSupportSystem.Services.DTO;
 using PMGSupportSystem.Services;
 using System.IO.Compression;
 using System.Security.Claims;
+using PMGSupportSystem.Repositories.Models;
 
 namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 {
@@ -101,7 +102,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                         var studentName = submission.Student.FullName ?? "Unknown";
                         var fileNameInZip = $"{studentName}_{submission.StudentId}{Path.GetExtension(submission.FilePath)}";
 
-                        var zipEntry =  zip.CreateEntry(fileNameInZip);
+                        var zipEntry = zip.CreateEntry(fileNameInZip);
                         using var entryStream = zipEntry.Open();
                         await entryStream.WriteAsync(fileBytes);
                     }
@@ -130,8 +131,8 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Student not found.");
             }
 
-            var grade = await _servicesProvider.SubmissionService.GetSubmissionByExamIdAsync(examId, studentId );
-            if (grade == null ||!grade.Status.Equals("Published"))
+            var grade = await _servicesProvider.SubmissionService.GetSubmissionByExamIdAsync(examId, studentId);
+            if (grade == null || !grade.Status.Equals("Published"))
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
@@ -141,6 +142,72 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         {
             var (items, total) = await _servicesProvider.SubmissionService.GetSubmissionTableAsync(page, pageSize);
             return Ok(new { total, data = items });
+        }
+        
+        [Authorize(Roles = "Lecturer")]
+        [HttpPost("submit-grade/{submissionId}")]
+        public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] decimal grade)
+        {
+            // Lấy thông tin người chấm từ token
+            var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(lecturerIdString))
+            {
+                return Unauthorized("Lecturer ID is required.");
+            }
+            Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
+
+            // Lấy Submission từ cơ sở dữ liệu
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
+            if (submission == null)
+            {
+                return NotFound("Submission not found.");
+            }
+
+            // Kiểm tra quyền của giảng viên
+            if (submission.Exam.UploadBy != lecturerId)
+            {
+                return Forbid("You are not authorized to grade this submission.");
+            }
+
+            // Kiểm tra vòng chấm điểm (GradeRound) để nhập điểm vào
+            var roundNumber = 1; // Ví dụ: vòng chấm điểm đầu tiên
+            var gradeRound = submission.GradeRounds.FirstOrDefault(gr => gr.RoundNumber == roundNumber);
+            
+            if (gradeRound == null)
+            {
+                // Nếu chưa có vòng chấm điểm, tạo mới một vòng
+                gradeRound = new GradeRound
+                {
+                    SubmissionId = submission.SubmissionId,
+                    RoundNumber = roundNumber,
+                    LecturerId = lecturerId,
+                    Score = grade,
+                    Status = "Graded",
+                    GradeAt = DateTime.Now
+                };
+                await _servicesProvider.GradeRoundService.CreateAsync(gradeRound); // Giả sử có phương thức tạo mới
+            }
+            else
+            {
+                // Nếu đã có vòng chấm điểm, cập nhật điểm
+                gradeRound.Score = grade;
+                gradeRound.Status = "Graded";
+                gradeRound.GradeAt = DateTime.Now;
+                await _servicesProvider.GradeRoundService.UpdateAsync(gradeRound); // Giả sử có phương thức cập nhật
+            }
+
+            // Cập nhật lại trạng thái bài thi (nếu cần)
+            submission.FinalScore = grade; // Cập nhật điểm cuối cùng cho bài thi
+            submission.Status = "Graded"; // Đánh dấu trạng thái bài thi là đã được chấm điểm
+
+            // Lưu lại bài thi
+            var result = await _servicesProvider.SubmissionService.UpdateSubmissionAsync(submission);
+            if (!result)
+            {
+                return StatusCode(500, "Failed to submit grade.");
+            }
+
+            return Ok("Grade submitted successfully.");
         }
 
     }

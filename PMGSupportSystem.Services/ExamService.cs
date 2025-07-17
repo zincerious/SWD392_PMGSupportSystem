@@ -21,6 +21,7 @@ namespace PMGSupportSystem.Services
         Task<(IEnumerable<Exam> Items, int TotalCount)> GetPagedExamsAsync(int page, int pageSize, Guid? examinerId, DateTime? uploadedAt, string? status);
         Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id);
         Task<bool> AutoAssignLecturersAsync(Guid assignedByUserId, Guid examId);
+        Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy);
     }
     public class ExamService : IExamService
     {
@@ -67,7 +68,7 @@ namespace PMGSupportSystem.Services
             if (allExams == null)
                 return new List<Exam>();
 
-            var exams = allExams.Where(e => examIds.Contains(e.ExamId)).OrderByDescending(e => e.UploadedAt) .ToList();
+            var exams = allExams.Where(e => examIds.Contains(e.ExamId)).OrderByDescending(e => e.UploadedAt).ToList();
 
             return exams;
 
@@ -275,7 +276,7 @@ namespace PMGSupportSystem.Services
                 {
                     SubmissionId = submission.SubmissionId,
                     RoundNumber = 1,
-                    LecturerId= lecturer.Id,
+                    LecturerId = lecturer.Id,
                     Note = "",
                     MeetingUrl = "",
                     Status = "Created"
@@ -461,6 +462,39 @@ namespace PMGSupportSystem.Services
                 time = time.AddMinutes(30); // thử lại sau 30 phút
             }
         }
+        
+        public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
+        {
+            var exam = await _unitOfWork.ExamRepository.GetExamByIdAsync(examId);
+            if (exam == null) return false;
+
+            var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
+            if (submissions == null || !submissions.Any()) return false;
+
+            foreach (var submission in submissions)
+            {
+                if (submission.FinalScore.HasValue && submission.Status != "Published")
+                {
+                    submission.Status = "Published";
+                    submission.PublishedBy = confirmedBy;               
+                }
+            }
+
+            exam.Status = "Published";
+
+            try
+            {
+                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);  // bạn cần có hàm này
+                await _unitOfWork.ExamRepository.UpdateAsync(exam);
+                await _unitOfWork.SaveChangesAsync();  // dùng đúng theo UnitOfWork
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
 
     }
 }

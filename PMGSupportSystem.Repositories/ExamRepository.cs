@@ -103,7 +103,7 @@ namespace PMGSupportSystem.Repositories
                 {
                     return false;
                 }
-                
+
                 var examByCode = await _context.Exams.FirstOrDefaultAsync(e => e.Semester == semester);
                 if (examByCode != null)
                 {
@@ -161,7 +161,7 @@ namespace PMGSupportSystem.Repositories
             }
 
             return (exam.FilePath, exam.BaremFile);
-        } 
+        }
 
         //trich xuat image => text
         public string ExtractTextFromImage(string imagePath)
@@ -216,6 +216,7 @@ namespace PMGSupportSystem.Repositories
                 return null;
             }
         }
-
+        
+       
     }
 }
