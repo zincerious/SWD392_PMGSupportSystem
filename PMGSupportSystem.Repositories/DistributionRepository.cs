@@ -27,7 +27,7 @@ namespace PMGSupportSystem.Repositories
             return await _context.SubmissionDistributions
                 .Include(d => d.Lecturer)
                 .Where(d => d.LecturerId == lecturerId)
-                .Include(d => d.Submission)
+                .Include(d => d.Lecturer)
                 .ToListAsync();
         }
 
@@ -37,7 +37,6 @@ namespace PMGSupportSystem.Repositories
                 .Where(d => d.Submission.ExamId == examId && d.LecturerId == lecturerId)
                 .Include(d => d.Submission)
                 .Include(d => d.Lecturer)
-                .OrderByDescending(d => d.AssignedAt)
                 .ToListAsync();
         }
 
