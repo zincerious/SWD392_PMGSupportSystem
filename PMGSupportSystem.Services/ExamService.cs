@@ -2,6 +2,7 @@
 using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
 using System.Linq.Expressions;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
@@ -14,6 +15,7 @@ namespace PMGSupportSystem.Services
         Task CreateExamAsync(Exam exam);
         Task UpdateExamAsync(Exam exam);
         Task DeleteExamAsync(Exam exam);
+        Task<ListExamDTO> GetListOfExamsAsync(Guid studentId, int page, int pageSize);
         Task<(IEnumerable<Exam> exams, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status);
         Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester);
         Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt);
@@ -21,6 +23,7 @@ namespace PMGSupportSystem.Services
         Task<(IEnumerable<Exam> Items, int TotalCount)> GetPagedExamsAsync(int page, int pageSize, Guid? examinerId, DateTime? uploadedAt, string? status);
         Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id);
         Task<bool> AutoAssignLecturersAsync(Guid assignedByUserId, Guid examId);
+        Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy);
     }
     public class ExamService : IExamService
     {
@@ -39,6 +42,22 @@ namespace PMGSupportSystem.Services
         public async Task DeleteExamAsync(Exam exam)
         {
             await _unitOfWork.ExamRepository.DeleteAsync(exam);
+        }
+
+        public async Task<ListExamDTO> GetListOfExamsAsync(Guid studentId,int page, int pageSize)
+        {
+            var result = await _unitOfWork.ExamRepository.GetExamPagedListAsync(studentId, page, pageSize);
+            var listExamDto = new ListExamDTO();
+            foreach (var s in result.Items)
+            {
+                listExamDto.Exams.Add(new ExamDTO()
+                {
+                    Id = s.ExamId,
+                    Semester = s.Semester,
+                });
+            }
+            listExamDto.TotalCount = result.TotalCount;
+            return listExamDto;
         }
 
         public async Task<Exam?> GetExamByIdAsync(Guid id)
@@ -67,7 +86,7 @@ namespace PMGSupportSystem.Services
             if (allExams == null)
                 return new List<Exam>();
 
-            var exams = allExams.Where(e => examIds.Contains(e.ExamId)).OrderByDescending(e => e.UploadedAt) .ToList();
+            var exams = allExams.Where(e => examIds.Contains(e.ExamId)).OrderByDescending(e => e.UploadedAt).ToList();
 
             return exams;
 
@@ -275,7 +294,7 @@ namespace PMGSupportSystem.Services
                 {
                     SubmissionId = submission.SubmissionId,
                     RoundNumber = 1,
-                    LecturerId= lecturer.Id,
+                    LecturerId = lecturer.Id,
                     Note = "",
                     MeetingUrl = "",
                     Status = "Created"
@@ -461,6 +480,39 @@ namespace PMGSupportSystem.Services
                 time = time.AddMinutes(30); // thử lại sau 30 phút
             }
         }
+        
+        public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
+        {
+            var exam = await _unitOfWork.ExamRepository.GetExamByIdAsync(examId);
+            if (exam == null) return false;
+
+            var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
+            if (submissions == null || !submissions.Any()) return false;
+
+            foreach (var submission in submissions)
+            {
+                if (submission.FinalScore.HasValue && submission.Status != "Published")
+                {
+                    submission.Status = "Published";
+                    submission.PublishedBy = confirmedBy;               
+                }
+            }
+
+            exam.Status = "Published";
+
+            try
+            {
+                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);  // bạn cần có hàm này
+                await _unitOfWork.ExamRepository.UpdateAsync(exam);
+                await _unitOfWork.SaveChangesAsync();  // dùng đúng theo UnitOfWork
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
 
     }
 }

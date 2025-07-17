@@ -14,7 +14,7 @@ namespace PMGSupportSystem.Repositories
         public SubmissionRepository(SU25_SWD392Context context)
         {
             _context = context;
-        }   
+        }
 
         public async Task<Submission?> GetSubmissionByStudentIdAsync(Guid studentId)
         {
@@ -70,6 +70,7 @@ namespace PMGSupportSystem.Repositories
         {
             return await _context.Submissions
                 .Include(s => s.Student)
+                .Include(s => s.Exam)
                 .FirstOrDefaultAsync(s => s.SubmissionId == id);
         }
 
@@ -86,13 +87,16 @@ namespace PMGSupportSystem.Repositories
             else
             {
                 return submissions.Where(s =>
-                    _context.GradeRounds.Include(gr => gr.Submission).ThenInclude(s => s.Student).Any(gr => 
+                    _context.GradeRounds.Include(gr => gr.Submission).ThenInclude(s => s.Student).Any(gr =>
                         gr.Submission.ExamId == examId
                         && gr.Submission.StudentId == s.StudentId
                         && gr.RoundNumber == (roundNumber - 1))).ToList();
             }
         }
-
-
+        public async Task UpdateRangeAsync(IEnumerable<Submission> submissions)
+        {
+            _context.Submissions.UpdateRange(submissions);
+            await _context.SaveChangesAsync();
+        }
     }
 }

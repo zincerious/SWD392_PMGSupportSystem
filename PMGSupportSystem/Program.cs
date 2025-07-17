@@ -85,6 +85,7 @@ namespace PMGSupportSystem
             builder.Services.AddSingleton<JwtHelper>();
 
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddHttpClient();
 
             builder.Services.AddAuthentication(options =>
             {
