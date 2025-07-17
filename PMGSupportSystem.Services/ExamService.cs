@@ -2,6 +2,7 @@
 using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
 using System.Linq.Expressions;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
@@ -9,10 +10,12 @@ namespace PMGSupportSystem.Services
     {
         Task<IEnumerable<Exam>?> GetExamsAsync();
         Task<Exam?> GetExamByIdAsync(Guid id);
+        Task<List<Exam>?> GetAllExamByStudentIdAsync(Guid studentId);
         Task<IEnumerable<Exam>?> SearchExamsAsync(Guid examinerId, DateTime uploadedAt, string status);
         Task CreateExamAsync(Exam exam);
         Task UpdateExamAsync(Exam exam);
         Task DeleteExamAsync(Exam exam);
+        Task<ListExamDTO> GetListOfExamsAsync(Guid studentId, int page, int pageSize);
         Task<(IEnumerable<Exam> exams, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status);
         Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester);
         Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt);
@@ -20,6 +23,7 @@ namespace PMGSupportSystem.Services
         Task<(IEnumerable<Exam> Items, int TotalCount)> GetPagedExamsAsync(int page, int pageSize, Guid? examinerId, DateTime? uploadedAt, string? status);
         Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id);
         Task<bool> AutoAssignLecturersAsync(Guid assignedByUserId, Guid examId);
+        Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy);
     }
     public class ExamService : IExamService
     {
@@ -40,9 +44,52 @@ namespace PMGSupportSystem.Services
             await _unitOfWork.ExamRepository.DeleteAsync(exam);
         }
 
+        public async Task<ListExamDTO> GetListOfExamsAsync(Guid studentId,int page, int pageSize)
+        {
+            var result = await _unitOfWork.ExamRepository.GetExamPagedListAsync(studentId, page, pageSize);
+            var listExamDto = new ListExamDTO();
+            foreach (var s in result.Items)
+            {
+                listExamDto.Exams.Add(new ExamDTO()
+                {
+                    Id = s.ExamId,
+                    Semester = s.Semester,
+                });
+            }
+            listExamDto.TotalCount = result.TotalCount;
+            return listExamDto;
+        }
+
         public async Task<Exam?> GetExamByIdAsync(Guid id)
         {
             return await _unitOfWork.ExamRepository.GetByIdAsync(id);
+        }
+
+        public async Task<List<Exam>?> GetAllExamByStudentIdAsync(Guid studentId)
+        {
+            var submissions = await _unitOfWork.SubmissionRepository.GetAllSubmissionByStudentIdAsync(studentId);
+            if (submissions == null || !submissions.Any())
+                return new List<Exam>();
+
+            // Get list examIds
+            var examIds = submissions
+                .Where(s => s.ExamId.HasValue)
+                .Select(s => s.ExamId.Value)
+                .Distinct()
+                .ToList();
+
+            if (!examIds.Any())
+                return new List<Exam>();
+
+            // Filter exams by examIds
+            var allExams = await _unitOfWork.ExamRepository.GetExamsAsync();
+            if (allExams == null)
+                return new List<Exam>();
+
+            var exams = allExams.Where(e => examIds.Contains(e.ExamId)).OrderByDescending(e => e.UploadedAt).ToList();
+
+            return exams;
+
         }
 
         public async Task<IEnumerable<Exam>?> GetExamsAsync()
@@ -60,10 +107,11 @@ namespace PMGSupportSystem.Services
                 (string.IsNullOrEmpty(status) || x.Status == status);
 
             return await _unitOfWork.ExamRepository.GetPagedListAsync(
-                page: pageNumber,
-                pageSize: pageSize,
-                filter: filter,
-                q => q.OrderBy(x => x.ExamId));
+                    page: pageNumber,
+                    pageSize: pageSize,
+                    include: null,
+                    filter: filter,
+                    orderBy: q => q.OrderBy(x => x.ExamId));
         }
 
         public async Task<IEnumerable<Exam>?> SearchExamsAsync(Guid examinerId, DateTime uploadedAt, string status)
@@ -106,6 +154,7 @@ namespace PMGSupportSystem.Services
             var exams = await _unitOfWork.ExamRepository.GetPagedListAsync(
                 page: page,
                 pageSize: pageSize,
+                null,
                 filter: filter,
                 q => q.OrderBy(x => x.ExamId));
 
@@ -124,37 +173,39 @@ namespace PMGSupportSystem.Services
             var users = await _unitOfWork.UserRepository.GetAllAsync();
             var lecturers = users.Where(u => u.Role == "Lecturer").ToList();
             bool result = false;
-            if (!rounds.Any(gr => gr.RoundNumber == 1))
+
+            // Get submissions that are not assigned in round 1 
+            var submissionsToAssignRound1 = submissions!.Where(s => !rounds.Any(r => r.SubmissionId == s.SubmissionId && r.RoundNumber == 1)).ToList();
+            // Assign round 1 for submissions that are not assigned
+            if (submissionsToAssignRound1.Any())
             {
-                result = await AutoAssignRound1Async(assignedByUserId, examId, submissions!.ToList(), lecturers, users.ToList());
-            }
-            else if (!rounds.Any(gr => gr.RoundNumber == 2))
-            {
-                var approvedRegradeRequests = await _unitOfWork.RegradeRequestRepository
-                    .GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 2);
-                if (approvedRegradeRequests.Any())
-                {
-                    result = await AutoAssignRound2Async(assignedByUserId, examId, submissions!.ToList(), lecturers, users.ToList());
-                }
-            }
-            else if (!rounds.Any(gr => gr.RoundNumber == 3))
-            {
-                var approvedRegradeRequests = await _unitOfWork.RegradeRequestRepository
-                    .GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 3);
-                if (approvedRegradeRequests.Any())
-                {
-                    result = await AutoAssignRound3Async(assignedByUserId, examId);
-                }
+                result = await AutoAssignRound1Async(assignedByUserId, examId, submissionsToAssignRound1, lecturers, users.ToList());
             }
 
-            if (result && submissions != null)
+            // Get approved regrade requests for round 2
+            var approvedRegradeRequests2 = await _unitOfWork.RegradeRequestRepository.GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 2);
+            // Get submissions that are not assigned in round 2
+            var submissionsToAssignRound2 = approvedRegradeRequests2
+                .Where(req => !rounds.Any(r => r.SubmissionId == req.SubmissionId && r.RoundNumber == 2))
+                .Select(req => submissions!.FirstOrDefault(s => s.SubmissionId == req.SubmissionId))
+                .Where(s => s != null)
+                .ToList();
+            if (submissionsToAssignRound2.Any())
             {
-                foreach (var submission in submissions)
-                {
-                    submission.Status = "Assigned";
-                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
-                }
-                await _unitOfWork.SaveChangesAsync();
+                result = await AutoAssignRound2Async(assignedByUserId, examId, submissionsToAssignRound2!, lecturers, users.ToList()) || result;
+            }
+
+            // Get approved regrade requests for round 3
+            var approvedRegradeRequests3 = await _unitOfWork.RegradeRequestRepository.GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 3);
+            // Get submissions that are not assigned in round 3
+            var submissionsToAssignRound3 = approvedRegradeRequests3
+                .Where(req => !rounds.Any(r => r.SubmissionId == req.SubmissionId && r.RoundNumber == 3))
+                .Select(req => submissions!.FirstOrDefault(s => s.SubmissionId == req.SubmissionId))
+                .Where(s => s != null)
+                .ToList();
+            if (submissionsToAssignRound3.Any())
+            {
+                result = await AutoAssignRound3Async(assignedByUserId, examId, submissionsToAssignRound3!) || result;
             }
 
             return result;
@@ -243,7 +294,7 @@ namespace PMGSupportSystem.Services
                 {
                     SubmissionId = submission.SubmissionId,
                     RoundNumber = 1,
-                    LecturerId= lecturer.Id,
+                    LecturerId = lecturer.Id,
                     Note = "",
                     MeetingUrl = "",
                     Status = "Created"
@@ -253,6 +304,11 @@ namespace PMGSupportSystem.Services
 
             await _unitOfWork.DistributionRepository.AddRangeAsync(newDistributions);
             await _unitOfWork.GradeRoundRepository.AddRangeAsync(newGradeRounds);
+            foreach (var submission in submissions)
+            {
+                submission.Status = "Assigned";
+                await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+            }
             await _unitOfWork.SaveChangesAsync();
 
             await SendNotificationEmailRound1Async(newDistributions, lecturers, users, submissions);
@@ -260,20 +316,15 @@ namespace PMGSupportSystem.Services
             return true;
         }
 
-        private async Task<bool> AutoAssignRound2Async(Guid assignedByUserId, Guid examId, List<Submission> submissions, List<User> lecturers, List<User> users)
+        private async Task<bool> AutoAssignRound2Async(Guid assignedByUserId, Guid examId, List<Submission> submissionsToAssign, List<User> lecturers, List<User> users)
         {
             var now = DateTime.Now;
             var newGradeRounds = new List<GradeRound>();
 
-            var approvedRegradeRequests = await _unitOfWork.RegradeRequestRepository
-                .GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 2);
-            if (!approvedRegradeRequests.Any()) return false;
+            if (!submissionsToAssign.Any()) return false;
 
-            foreach (var request in approvedRegradeRequests)
+            foreach (var submission in submissionsToAssign)
             {
-                var submission = submissions.FirstOrDefault(s => s.SubmissionId == request.SubmissionId);
-                if (submission == null) continue;
-
                 var firstRound = await _unitOfWork.GradeRoundRepository.GetBySubmissionIdAndNumberAsync(submission.SubmissionId, 1);
 
                 var availableLecturers = lecturers.Where(l => l.Id != firstRound?.LecturerId).ToList();
@@ -288,43 +339,50 @@ namespace PMGSupportSystem.Services
                 {
                     SubmissionId = submission.SubmissionId,
                     RoundNumber = 2,
-                    LecturerId = firstRound?.LecturerId,
-                    CoLecturerId = colecturer.Id,
+                    LecturerId = colecturer.Id,
                     Note = "",
                     MeetingUrl = "",
                     Status = "Created"
                 };
                 newGradeRounds.Add(gradeRound);
                 await _unitOfWork.GradeRoundRepository.CreateAsync(gradeRound);
+
+                // Update lecturer in distribution
+                var distribution = (await _unitOfWork.DistributionRepository.GetDistributionsByExamIdAsync(examId)).FirstOrDefault(d => d.SubmissionId == submission.SubmissionId);
+                if (distribution != null)
+                {
+                    distribution.LecturerId = colecturer.Id;
+                    distribution.Status = "InProgress";
+                    await _unitOfWork.DistributionRepository.UpdateAsync(distribution);
+                }
+
+                submission.Status = "Assigned";
+                await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
             }
+
             await _unitOfWork.SaveChangesAsync();
 
-            await SendNotificationEmailRound2Async(newGradeRounds, lecturers, users, submissions);
+            await SendNotificationEmailRound2Async(newGradeRounds, lecturers, users, submissionsToAssign);
 
             return true;
         }
 
-        private async Task<bool> AutoAssignRound3Async(Guid assignedByUserId, Guid examId)
+
+        private async Task<bool> AutoAssignRound3Async(Guid assignedByUserId, Guid examId, List<Submission> submissionsToAssign)
         {
             var now = DateTime.Now;
 
-            var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
             var gradeRounds = await _unitOfWork.GradeRoundRepository.GetByExamIdAsync(examId);
             var users = await _unitOfWork.UserRepository.GetAllAsync();
             var lecturers = users.Where(u => u.Role == "Lecturer").ToList();
 
-            var approvedRegradeRequests = await _unitOfWork.RegradeRequestRepository
-                .GetApprovedRegradeRequestsByExamAndRoundAsync(examId, 3);
-
-            if (!approvedRegradeRequests.Any()) return false;
+            if (!submissionsToAssign.Any()) return false;
 
             var newGradeRounds = new List<GradeRound>();
+            var submissionsToUpdate = new List<Submission>();
 
-            foreach (var request in approvedRegradeRequests)
+            foreach (var submission in submissionsToAssign)
             {
-                var submission = submissions!.FirstOrDefault(s => s.SubmissionId == request.SubmissionId);
-                if (submission == null) continue;
-                
                 var rounds = gradeRounds
                     .Where(gr => gr.SubmissionId == submission.SubmissionId)
                     .OrderBy(gr => gr.RoundNumber)
@@ -347,7 +405,7 @@ namespace PMGSupportSystem.Services
                 var roomName = $"Review-{examId:N}-{Guid.NewGuid():N}";
                 var meetingUrl = $"https://meet.jit.si/{roomName}";
 
-                var scheduleAt = FindNextAvailableSlot(lecturer1 , lecturer2, gradeRounds.ToList(), now.AddDays(1).AddHours(8), 30);
+                var scheduleAt = FindNextAvailableSlot(lecturer1, lecturer2, gradeRounds.ToList(), now.AddDays(1).AddHours(8), 30);
 
                 var gradeRound = new GradeRound
                 {
@@ -362,6 +420,17 @@ namespace PMGSupportSystem.Services
                 };
 
                 newGradeRounds.Add(gradeRound);
+                submission.Status = "Assigned";
+                submissionsToUpdate.Add(submission);
+
+                // Update lecturer in distribution
+                var distribution = (await _unitOfWork.DistributionRepository.GetDistributionsByExamIdAsync(examId)).FirstOrDefault(d => d.SubmissionId == submission.SubmissionId);
+                if (distribution != null)
+                {
+                    distribution.LecturerId = lecturer1.Id;
+                    distribution.Status = "InProgress";
+                    await _unitOfWork.DistributionRepository.UpdateAsync(distribution);
+                }
 
                 var subject = "Round 3 Meeting Scheduled";
                 var body = $"Dear {lecturer1.FullName}, {lecturer2.FullName} and {student.FullName} with StudentCode: {student.Code},<br/>" +
@@ -379,11 +448,16 @@ namespace PMGSupportSystem.Services
             if (newGradeRounds.Any())
             {
                 await _unitOfWork.GradeRoundRepository.AddRangeAsync(newGradeRounds);
+                foreach (var submission in submissionsToUpdate)
+                {
+                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                }
                 await _unitOfWork.SaveChangesAsync();
             }
 
             return true;
         }
+
 
         private DateTime FindNextAvailableSlot(User lecturer1, User lecturer2, List<GradeRound> rounds, DateTime start, int bufferMinutes)
         {
@@ -406,6 +480,39 @@ namespace PMGSupportSystem.Services
                 time = time.AddMinutes(30); // thử lại sau 30 phút
             }
         }
+        
+        public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
+        {
+            var exam = await _unitOfWork.ExamRepository.GetExamByIdAsync(examId);
+            if (exam == null) return false;
+
+            var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
+            if (submissions == null || !submissions.Any()) return false;
+
+            foreach (var submission in submissions)
+            {
+                if (submission.FinalScore.HasValue && submission.Status != "Published")
+                {
+                    submission.Status = "Published";
+                    submission.PublishedBy = confirmedBy;               
+                }
+            }
+
+            exam.Status = "Published";
+
+            try
+            {
+                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);  // bạn cần có hàm này
+                await _unitOfWork.ExamRepository.UpdateAsync(exam);
+                await _unitOfWork.SaveChangesAsync();  // dùng đúng theo UnitOfWork
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
 
     }
 }

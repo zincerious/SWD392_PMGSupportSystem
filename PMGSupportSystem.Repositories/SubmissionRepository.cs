@@ -14,7 +14,7 @@ namespace PMGSupportSystem.Repositories
         public SubmissionRepository(SU25_SWD392Context context)
         {
             _context = context;
-        }   
+        }
 
         public async Task<Submission?> GetSubmissionByStudentIdAsync(Guid studentId)
         {
@@ -22,7 +22,10 @@ namespace PMGSupportSystem.Repositories
                 .Include(a => a.Student)
                 .FirstOrDefaultAsync(a => a.StudentId == studentId);
         }
-
+        public async Task<List<Submission>?> GetAllSubmissionByStudentIdAsync(Guid studentId)
+        {
+            return await _context.Submissions.Where(a => a.StudentId == studentId).ToListAsync();
+        }
         public async Task<IEnumerable<Submission>?> GetSubmissionsAsync()
         {
             return await _context.Submissions
@@ -35,21 +38,11 @@ namespace PMGSupportSystem.Repositories
             var result = await GetPagedListAsync(
                 page,
                 pageSize,
-                filter: null,
-                orderBy: q => q.OrderByDescending(s => s.SubmittedAt)
+                include: q => q.Include(x => x.Student),
+                orderBy: q => q.OrderByDescending(x => x.SubmittedAt)
             );
-             
-            // Include student
-            var itemsWithStudent = result.Items
-                .Select(s => _context.Submissions
-                    .Include(x => x.Student)
-                    .FirstOrDefault(x => x.SubmissionId == s.SubmissionId))
-                .Where(x => x != null)
-                .ToList();
-
-            return (itemsWithStudent!, result.TotalCount);
+            return (result.Items, result.TotalCount);
         }
-
 
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId)
         {
@@ -73,7 +66,7 @@ namespace PMGSupportSystem.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Submission?> GetSubmissionByIdAsync(Guid id)
+        public async Task<Submission?> GetSubmissionByIdAsync(Guid? id)
         {
             return await _context.Submissions
                 .Include(s => s.Student)
@@ -93,12 +86,27 @@ namespace PMGSupportSystem.Repositories
             else
             {
                 return submissions.Where(s =>
-                    _context.GradeRounds.Include(gr => gr.Submission).ThenInclude(s => s.Student).Any(gr => 
+                    _context.GradeRounds.Include(gr => gr.Submission).ThenInclude(s => s.Student).Any(gr =>
                         gr.Submission.ExamId == examId
                         && gr.Submission.StudentId == s.StudentId
                         && gr.RoundNumber == (roundNumber - 1))).ToList();
             }
         }
+
+        public async Task UpdateRangeAsync(IEnumerable<Submission> submissions)
+        {
+            _context.Submissions.UpdateRange(submissions);
+            await _context.SaveChangesAsync();
+        }
+        
+        
+        public async Task<Submission?> GetSubmissionByIdAsync(Guid submissionId)
+{
+    return await _context.Submissions
+        .Include(s => s.Student)  // Nếu cần thông tin về sinh viên
+        .Include(s => s.Exam)  // Nếu cần thông tin về kỳ thi
+        .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+}
 
     }
 }

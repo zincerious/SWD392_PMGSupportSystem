@@ -14,6 +14,8 @@ namespace PMGSupportSystem.Services
         Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid examId, IEnumerable<Guid> studentIds);
         Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId);
         Task<(IEnumerable<SubmissionDTO> Items, int TotalCount)> GetSubmissionTableAsync(int page, int pageSize);
+        Task<bool> UpdateSubmissionAsync(Submission submission);
+        Task<Submission?> GetSubmissionByIdAsync(Guid submissionId);
     }
     public class SubmissionService : ISubmissionService
     {
@@ -122,7 +124,7 @@ namespace PMGSupportSystem.Services
         {
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
             var parts = nameWithoutExtension.Split('_');
-            
+
             if (parts.Length >= 6)
             {
                 var studentName = parts[4];
@@ -163,14 +165,12 @@ namespace PMGSupportSystem.Services
 
         public async Task<(IEnumerable<SubmissionDTO> Items, int TotalCount)> GetSubmissionTableAsync(int page, int pageSize)
         {
-            // Get submission
+            // Get paging submissions
             var (submissions, totalCount) = await _unitOfWork.SubmissionRepository.GetPagedSubmissionsAsync(page, pageSize);
 
-            // Get examIds, studentIds, submissionIds
             var examIds = submissions.Select(s => s.ExamId).Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
             var studentIds = submissions.Select(s => s.StudentId).Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
             var submissionIds = submissions.Select(s => s.SubmissionId).ToList();
-
 
             var exams = (await _unitOfWork.ExamRepository.GetAllAsync()).Where(e => examIds.Contains(e.ExamId)).ToList();
             var students = (await _unitOfWork.UserRepository.GetAllAsync()).Where(u => studentIds.Contains(u.Id)).ToList();
@@ -178,41 +178,53 @@ namespace PMGSupportSystem.Services
                 .Where(d => submissionIds.Contains(d.SubmissionId ?? Guid.Empty)).ToList();
             var lecturerIds = distributions.Where(d => d.LecturerId.HasValue).Select(d => d.LecturerId!.Value).Distinct().ToList();
             var lecturers = (await _unitOfWork.UserRepository.GetAllAsync()).Where(u => lecturerIds.Contains(u.Id)).ToList();
-            var gradeRounds = await _unitOfWork.GradeRoundRepository.GetAllAsync();
 
-            var result = new List<SubmissionDTO>();
-            // Get submission in each round
-            foreach (var sub in submissions)
+            var result = submissions.Select(sub =>
             {
-                var exam = exams.Find(e => e.ExamId == sub.ExamId);
-                var student = students.Find(u => u.Id == sub.StudentId);
-                var distribution = distributions.Find(d => d.SubmissionId == sub.SubmissionId);
-                var lecturer = distribution != null ? lecturers.Find(l => l.Id == distribution.LecturerId) : null;
+                var exam = exams.FirstOrDefault(e => e.ExamId == sub.ExamId);
+                var student = students.FirstOrDefault(u => u.Id == sub.StudentId);
+                var distribution = distributions.FirstOrDefault(d => d.SubmissionId == sub.SubmissionId);
+                var lecturer = distribution != null ? lecturers.FirstOrDefault(l => l.Id == distribution.LecturerId) : null;
 
-                // Get submission in each round
-                foreach (var round in gradeRounds)
+                return new SubmissionDTO
                 {
-                    if (round.SubmissionId == sub.SubmissionId)
-                    {
-                        var dto = new SubmissionDTO
-                        {
-                            SubmissionId = sub.SubmissionId.ToString(),
-                            StudentCode = student?.Code ?? "",
-                            ExamId = exam?.ExamId.ToString() ?? "",
-                            ExamCode = exam?.Semester ?? "",
-                            AiScore = sub.AiScore,
-                            FinalScore = sub.FinalScore,
-                            Round = round.RoundNumber ?? null,
-                            Status = sub.Status,
-                            AssignedLecturer = lecturer?.FullName ?? ""
-                        };
-                        result.Add(dto);
-                    }
-                }
-            }
+                    SubmissionId = sub.SubmissionId.ToString(),
+                    StudentCode = student?.Code ?? "",
+                    ExamId = exam?.ExamId.ToString() ?? "",
+                    ExamCode = exam?.Semester ?? "",
+                    AiScore = sub.AiScore,
+                    FinalScore = sub.FinalScore,
+                    Status = sub.Status,
+                    AssignedLecturer = lecturer?.FullName ?? ""
+                };
+            }).ToList();
 
             return (result, totalCount);
         }
 
+        public async Task<bool> UpdateSubmissionAsync(Submission submission)
+        {
+            try
+            {
+                // Ensure you're using the UnitOfWork context to update the submission
+                await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                await _unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for better debugging
+                Console.WriteLine($"Error updating submission: {ex.Message}");
+                return false;
+            }
+        }
+
+        
+        public async Task<Submission?> GetSubmissionByIdAsync(Guid submissionId)
+        {
+            return await _unitOfWork.SubmissionRepository.GetSubmissionByIdAsync(submissionId);
+        }
+
+        
     }
 }

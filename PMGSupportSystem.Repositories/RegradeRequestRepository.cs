@@ -18,7 +18,7 @@ namespace PMGSupportSystem.Repositories
         {
             return await _context.RegradeRequests
                 .Include(rr => rr.Submission)
-                .Where(rr => rr.Submission.ExamId == examId && rr.RequestRound == requestRound)
+                .Where(rr => rr.Submission.ExamId == examId && rr.RequestRound == requestRound && rr.Status == "Approved")
                 .ToListAsync();
         }
 
@@ -27,6 +27,11 @@ namespace PMGSupportSystem.Repositories
             return await _context.RegradeRequests.Include(rr => rr.Submission)
                 .Where(rr => rr.SubmissionId == submissionId)
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId)
+        {
+            return await _context.RegradeRequests.Where(rr => rr.StudentId == studentId).ToListAsync();
         }
     }
 }

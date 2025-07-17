@@ -41,6 +41,10 @@ namespace PMGSupportSystem.Repositories
                 .ToListAsync();
         }
 
-        
+        public async Task<SubmissionDistribution?> GetDistributionsBySubmissionIdAsync(Guid submissionId)
+        {
+            return await _context.SubmissionDistributions
+                .FirstOrDefaultAsync(d => d.Submission.SubmissionId == submissionId);
+        }
     }
 }

@@ -6,7 +6,6 @@ namespace PMGSupportSystem.Services.DTO
         public string? StudentCode { get; set; }
         public string? ExamId { get; set; }
         public string? ExamCode { get; set; }
-        public int? Round { get; set; }
         public decimal? FinalScore { get; set; }
         public decimal? AiScore { get; set; }
         public string? Status { get; set; }

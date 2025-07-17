@@ -5,6 +5,8 @@ using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services;
 using System.IO.Compression;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Controllers
 {
@@ -177,6 +179,62 @@ namespace PMGSupportSystem.Controllers
             }
 
             return Ok("Lecturers assigned successfully!");
+        }
+
+        [Authorize(Roles = "Student")]
+        [HttpGet("student-list-exam")]
+        public async Task<ActionResult<ListExamDTO>>GetExamsByStudentAsync(int page, int pageSize = 10)
+        {
+            var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(studentIdString, out var studentId))
+            {
+                return Unauthorized("Invalid or missing student ID.");
+            }
+
+            var student = await _servicesProvider.UserService.GetUserByIdAsync(studentId);
+            if (student == null)
+            {
+                return NotFound("Student not found.");
+            }
+            var result = await _servicesProvider.ExamService.GetListOfExamsAsync(student.Id, page, pageSize);
+            if (result.Exams.IsNullOrEmpty()) return NotFound("No exams found.");
+             return Ok(result);
+        }
+        
+        [HttpGet("student-exams")]
+        public async Task<IActionResult> GetExamsByStudent()
+        {
+            var studentIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(studentIdString, out var studentId))
+                return Unauthorized("Invalid or missing student ID.");
+
+            var exams = await _servicesProvider.ExamService.GetAllExamByStudentIdAsync(studentId);
+            return Ok(exams ?? new List<PMGSupportSystem.Repositories.Models.Exam>());
+        }
+
+
+
+         /// <summary>
+        /// API xác nhận công khai điểm cho tất cả các bài thi trong môn học.
+        /// </summary>
+        /// <param name="examId">ID của kỳ thi</param>
+        /// <returns>Trạng thái kết quả</returns>
+        [Authorize(Roles = "DepartmentLeader")]
+        [HttpPost("confirm-publish/{examId}")]
+        public async Task<IActionResult> ConfirmPublishExam([FromRoute] Guid examId)
+        {
+            // Get the ID of the user (DepartmentLeader) who is confirming the publish
+            var confirmedBy = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            // Call the service through IServicesProvider to confirm and publish grades for all submissions in the exam
+            var result = await _servicesProvider.ExamService.ConfirmAndPublishExamAsync(examId, confirmedBy);
+
+            if (result)
+            {
+                return Ok("Grades for all submissions in this exam have been successfully published.");
+            }
+
+            return BadRequest("Unable to publish grades for this exam.");
         }
     }
 }
