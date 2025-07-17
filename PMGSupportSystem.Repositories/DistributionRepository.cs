@@ -45,6 +45,14 @@ namespace PMGSupportSystem.Repositories
             return await _context.SubmissionDistributions
                 .FirstOrDefaultAsync(d => d.Submission.SubmissionId == submissionId);
         }
+
+        public async Task<SubmissionDistribution?> GetDistributionByLecturerAndSubmissionAsync(Guid lecturerId, Guid submissionId)
+        {
+            return await _context.SubmissionDistributions
+                .Include(d => d.Lecturer)
+                .FirstOrDefaultAsync(d => d.LecturerId == lecturerId && d.SubmissionId == submissionId);
+        }
+        
         public async Task<IEnumerable<SubmissionDistribution>> GetALLDistributionBySubmissionIdAsync(Guid submissionId)
         {
             return await _context.SubmissionDistributions

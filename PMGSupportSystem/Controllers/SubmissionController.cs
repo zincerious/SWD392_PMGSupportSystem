@@ -136,7 +136,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
-        
+
         [Authorize(Roles = "DepartmentLeader, Examiner")]
         [HttpGet("submission-table")]
         public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
@@ -155,8 +155,40 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             }
             return Ok(new { aiScore = score });
         }
-        
-        
+
+        [Authorize(Roles = "Lecturer")]
+        [HttpGet("submission-detail/{submissionId}")]
+        public async Task<IActionResult> GetSubmissionDetail([FromRoute] Guid submissionId)
+        {
+            var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(lecturerIdString))
+            {
+                return Unauthorized("Lecturer ID is required.");
+            }
+            Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
+
+            if (!await _servicesProvider.SubmissionService.CheckLecturerAccess(submissionId, parseId))
+            {
+                return Forbid("You are not authorized to access this submission.");
+            }
+
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
+            if (submission == null)
+            {
+                return NotFound("Submission not found.");
+            }
+
+            var filePath = submission.FilePath;
+            if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+            {
+                return NotFound("Submission file not found.");
+            }
+
+            var content = await System.IO.File.ReadAllTextAsync(filePath);
+            return Ok(new { Content = content });
+        }
+
+
         [Authorize(Roles = "Lecturer")]
         [HttpPost("submit-grade/{submissionId}")]
         public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] GradeSubmissionDTO gradeSubmissionDTO)
@@ -187,6 +219,37 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return Forbid("You are not authorized to grade this submission.");
             }
 
+            // Kiểm tra vòng chấm điểm (GradeRound) để nhập điểm vào
+            var roundNumber = 1; // Ví dụ: vòng chấm điểm đầu tiên
+            var gradeRound = submission.GradeRounds.FirstOrDefault(gr => gr.RoundNumber == roundNumber);
+
+            if (gradeRound == null)
+            {
+                // Nếu chưa có vòng chấm điểm, tạo mới một vòng
+                gradeRound = new GradeRound
+                {
+                    SubmissionId = submission.SubmissionId,
+                    RoundNumber = roundNumber,
+                    LecturerId = lecturerId,
+                    Score = grade,
+                    Status = "Graded",
+                    GradeAt = DateTime.Now
+                };
+                await _servicesProvider.GradeRoundService.CreateAsync(gradeRound); // Giả sử có phương thức tạo mới
+            }
+            else
+            {
+                // Nếu đã có vòng chấm điểm, cập nhật điểm
+                gradeRound.Score = grade;
+                gradeRound.Status = "Graded";
+                gradeRound.GradeAt = DateTime.Now;
+                await _servicesProvider.GradeRoundService.UpdateAsync(gradeRound); // Giả sử có phương thức cập nhật
+            }
+
+            // Cập nhật lại trạng thái bài thi (nếu cần)
+            submission.FinalScore = grade; // Cập nhật điểm cuối cùng cho bài thi
+            submission.Status = "Graded"; // Đánh dấu trạng thái bài thi là đã được chấm điểm
+
             // Gọi service để tạo hoặc cập nhật vòng chấm điểm
             await _servicesProvider.GradeRoundService.CreateOrUpdateGradeRoundAsync(submissionId, lecturerId.Value, gradeSubmissionDTO.Grade, gradeSubmissionDTO.RoundNumber);
 
@@ -199,7 +262,5 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
             return Ok("Grade submitted successfully.");
         }
-
-
     }
 }
