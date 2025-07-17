@@ -2,8 +2,8 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using PMGSupportSystem.Repositories;
-using System.Net.Http.Json;	
-    
+using System.Net.Http.Json;
+
 namespace PMGSupportSystem.Services;
 
 public interface IAIService
@@ -18,7 +18,7 @@ public class AIService : IAIService
     public AIService(IUnitOfWork unitOfWork, IHttpClientFactory httpClientFactory)
     {
         _unitOfWork = unitOfWork;
-        _httpClientFactory =  httpClientFactory;
+        _httpClientFactory = httpClientFactory;
     }
     public async Task<decimal?> GradeSubmissionAsync(Guid submissionId)
     {
@@ -29,7 +29,7 @@ public class AIService : IAIService
         var submissionText = await File.ReadAllTextAsync(submission.FilePath);
         var examText = await File.ReadAllTextAsync(exam.FilePath);
         var baremText = await File.ReadAllTextAsync(exam.BaremFile);
-        
+
         var prompt = $"Grade the following essay based on the exam question and the scoring rubric. " +
                      $"Only return a single score in the format x.x/10 — no explanations or comments.\n\n" +
                      $"Exam question:\n{examText}\n\n" +
@@ -46,7 +46,7 @@ public class AIService : IAIService
         };
 
         var client = _httpClientFactory.CreateClient();
-        var response = await client.PostAsJsonAsync("http://localhost:1234/v1/chat/completions", aiScore);        
+        var response = await client.PostAsJsonAsync("http://localhost:1234/v1/chat/completions", aiScore);
         if (!response.IsSuccessStatusCode)
         {
             return null;

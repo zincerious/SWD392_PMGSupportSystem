@@ -11,16 +11,16 @@ namespace PMGSupportSystem.Services.DTO
         public string? Status { get; set; }
         public string? AssignedLecturer { get; set; }
     }
-  public class GradeDTO
-  {
-      public Guid SubmissionId { get; set; }
-      public decimal? FinalScore { get; set; }
-      public string Status { get; set; } = "";
-  }
+    public class GradeDTO
+    {
+        public Guid SubmissionId { get; set; }
+        public decimal? FinalScore { get; set; }
+        public string Status { get; set; } = "";
+    }
 
-  public class AiScoreDto
-  {
-      public Guid SubmissionId { get; set; }
-  }
+    public class AiScoreDto
+    {
+        public Guid SubmissionId { get; set; }
+    }
 }
 

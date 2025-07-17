@@ -77,7 +77,7 @@ namespace PMGSupportSystem.Services
                     if (distribution == null) return false;
                     distribution.Status = "InProgress";
                     distribution.LecturerId = null;
-                    
+
                     await _unitOfWork.DistributionRepository.UpdateAsync(distribution);
                     await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
                 }

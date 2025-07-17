@@ -74,7 +74,7 @@ namespace PMGSupportSystem.Services
             // Get list examIds
             var examIds = submissions
                 .Where(s => s.ExamId.HasValue)
-                .Select(s => s.ExamId.Value)
+                .Select(s => s.ExamId!.Value)
                 .Distinct()
                 .ToList();
 

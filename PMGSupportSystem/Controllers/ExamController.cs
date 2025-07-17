@@ -159,7 +159,7 @@ namespace PMGSupportSystem.Controllers
             {
                 return NotFound("Barem not found.");
             }
-            
+
             var filePath = exam.BaremFile;
 
             if (!System.IO.File.Exists(filePath))
@@ -203,7 +203,7 @@ namespace PMGSupportSystem.Controllers
 
         [Authorize(Roles = "Student")]
         [HttpGet("student-list-exam")]
-        public async Task<ActionResult<ListExamDTO>>GetExamsByStudentAsync(int page, int pageSize = 10)
+        public async Task<ActionResult<ListExamDTO>> GetExamsByStudentAsync(int page, int pageSize = 10)
         {
             var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(studentIdString, out var studentId))
@@ -218,9 +218,9 @@ namespace PMGSupportSystem.Controllers
             }
             var result = await _servicesProvider.ExamService.GetListOfExamsAsync(student.Id, page, pageSize);
             if (result.Exams.IsNullOrEmpty()) return NotFound("No exams found.");
-             return Ok(result);
+            return Ok(result);
         }
-        
+
         [HttpGet("student-exams")]
         public async Task<IActionResult> GetExamsByStudent()
         {
@@ -234,7 +234,7 @@ namespace PMGSupportSystem.Controllers
 
 
 
-         /// <summary>
+        /// <summary>
         /// API xác nhận công khai điểm cho tất cả các bài thi trong môn học.
         /// </summary>
         /// <param name="examId">ID của kỳ thi</param>

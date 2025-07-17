@@ -24,7 +24,7 @@ namespace PMGSupportSystem.Controllers
             {
                 return Unauthorized("You are not authenticated !");
             }
-            
+
             var lecturer = await _servicesProvider.UserService.GetUserByIdAsync(lecturerId);
             if (lecturer == null)
             {

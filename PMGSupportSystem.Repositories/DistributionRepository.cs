@@ -52,7 +52,7 @@ namespace PMGSupportSystem.Repositories
                 .Include(d => d.Lecturer)
                 .FirstOrDefaultAsync(d => d.LecturerId == lecturerId && d.SubmissionId == submissionId);
         }
-        
+
         public async Task<IEnumerable<SubmissionDistribution>> GetALLDistributionBySubmissionIdAsync(Guid submissionId)
         {
             return await _context.SubmissionDistributions

@@ -1,11 +1,4 @@
-﻿using PMGSupportSystem.Repositories.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PMGSupportSystem.Services.DTO
+﻿namespace PMGSupportSystem.Services.DTO
 {
     public class SubmissionDistributionDTO
     {
