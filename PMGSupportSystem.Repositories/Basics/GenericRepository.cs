@@ -78,10 +78,15 @@ namespace PMGSupportSystem.Repositories.Basics
         public async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedListAsync(
             int page,
             int pageSize = 10,
+            Func<IQueryable<T>, IQueryable<T>>? include = null,
             Expression<Func<T, bool>>? filter = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
         {
             IQueryable<T> query = _context.Set<T>();
+            if (include != null)
+            {
+                query = include(query);
+            }
             if (filter != null)
             {
                 query = query.Where(filter);

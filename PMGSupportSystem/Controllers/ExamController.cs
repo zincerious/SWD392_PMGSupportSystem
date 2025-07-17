@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PMGSupportSystem.DTOs;
+using PMGSupportSystem.Services.DTO;
 using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services;
 using System.IO.Compression;
@@ -23,7 +23,7 @@ namespace PMGSupportSystem.Controllers
 
         [Authorize(Roles = "Examiner")]
         [HttpPost("upload-exam-paper")]
-        public async Task<IActionResult> UploadExamPaper([FromForm] FileDTO uploadExamPaperDTO)
+        public async Task<IActionResult> UploadExamPaper([FromForm] FileDTO uploadExamPaperDTO, [FromForm] string semester)
         {
             if (uploadExamPaperDTO.DTOFile == null || uploadExamPaperDTO.DTOFile.Length == 0)
             {
@@ -38,7 +38,7 @@ namespace PMGSupportSystem.Controllers
             Guid? examinerId = Guid.TryParse(examinerIdString, out var parseId) ? parseId : null;
 
             var uploadedAt = DateTime.Now;
-            var result = await _servicesProvider.ExamService.UploadExamPaperAsync(parseId, uploadExamPaperDTO.DTOFile, uploadedAt);
+            var result = await _servicesProvider.ExamService.UploadExamPaperAsync(parseId, uploadExamPaperDTO.DTOFile, uploadedAt, semester);
 
             if (!result)
             {
@@ -49,8 +49,8 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Examiner")]
-        [HttpPost("upload-barem/{assignmentId}")]
-        public async Task<IActionResult> UploadBarem([FromRoute] Guid assignmentId, [FromForm] FileDTO uploadBaremDTO)
+        [HttpPost("upload-barem/{examId}")]
+        public async Task<IActionResult> UploadBarem([FromRoute] Guid examId, [FromForm] FileDTO uploadBaremDTO)
         {
             if (uploadBaremDTO.DTOFile == null || uploadBaremDTO.DTOFile.Length == 0)
             {
@@ -64,19 +64,19 @@ namespace PMGSupportSystem.Controllers
 
             Guid? examinerId = Guid.TryParse(examinerIdString, out var parseId) ? parseId : null;
 
-            var assignment = await _servicesProvider.ExamService.GetExamByIdAsync(assignmentId);
-            if (assignment == null)
+            var exam = await _servicesProvider.ExamService.GetExamByIdAsync(examId);
+            if (exam == null)
             {
                 return NotFound("Assignment not found.");
             }
 
-            if (assignment.UploadBy != parseId)
+            if (exam.UploadBy != parseId)
             {
                 return Forbid("You are not authorized to upload a barem for this assignment.");
             }
 
             var uploadedAt = DateTime.Now;
-            var result = await _servicesProvider.ExamService.UploadBaremAsync(assignmentId, parseId, uploadBaremDTO.DTOFile, uploadedAt);
+            var result = await _servicesProvider.ExamService.UploadBaremAsync(examId, parseId, uploadBaremDTO.DTOFile, uploadedAt);
 
             if (!result)
             {
@@ -86,8 +86,8 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Examiner")]
-        [HttpGet("assignments-examiner")]
-        public async Task<ActionResult<IEnumerable<Exam>>> GetAssignmentsByExaminerAsync()
+        [HttpGet("exams-examiner")]
+        public async Task<ActionResult<IEnumerable<Exam>>> GetExamsByExaminerAsync()
         {
             var examinerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(examinerIdString))
@@ -101,13 +101,13 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Administrator")]
-        [HttpGet("assignments-admin")]
-        public async Task<ActionResult<IEnumerable<Exam>>> GetAssignmentsAsync(int page = 1, int pageSize = 10, Guid? examniner = null, DateTime? uploadedAt = null, string? status = null)
+        [HttpGet("exams-admin")]
+        public async Task<ActionResult<IEnumerable<Exam>>> GetAssignmentsAsync(int page = 1, int pageSize = 10, Guid? examninerId = null, DateTime? uploadedAt = null, string? status = null)
         {
-            var assignments = await _servicesProvider.ExamService.GetPagedExamsAsync(page, pageSize, examniner, uploadedAt, status);
+            var assignments = await _servicesProvider.ExamService.GetPagedExamsAsync(page, pageSize, examninerId, uploadedAt, status);
             if (assignments.Items == null || !assignments.Items.Any())
             {
-                return NotFound("No assignments found.");
+                return NotFound("No exams found.");
             }
             return Ok(new
             {
@@ -152,15 +152,15 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "DepartmentLeader")]
-        [HttpPost("assign-lecturers/{assignmentId}")]
-        public async Task<IActionResult> AutoAssignLecturersAsync([FromRoute] Guid assignmentId)
+        [HttpPost("assign-lecturers/{examId}")]
+        public async Task<IActionResult> AutoAssignLecturersAsync([FromRoute] Guid examId)
         {
-            if (assignmentId == Guid.Empty)
+            if (examId == Guid.Empty)
             {
                 return BadRequest("Empty assignment id.");
             }
-            var assignment = await _servicesProvider.ExamService.GetExamByIdAsync(assignmentId);
-            if (assignment == null)
+            var exam = await _servicesProvider.ExamService.GetExamByIdAsync(examId);
+            if (exam == null)
             {
                 return NotFound("Not found assignment");
             }
@@ -172,7 +172,7 @@ namespace PMGSupportSystem.Controllers
 
             Guid? departmentId = Guid.TryParse(departmentLeaderIdString, out var parseId) ? parseId : null;
 
-            var result = await _servicesProvider.ExamService.AutoAssignLecturersAsync(parseId, assignmentId);
+            var result = await _servicesProvider.ExamService.AutoAssignLecturersAsync(parseId, examId);
             if (!result)
             {
                 return BadRequest("No submissions or lecturers available.");
@@ -199,6 +199,42 @@ namespace PMGSupportSystem.Controllers
             var result = await _servicesProvider.ExamService.GetListOfExamsAsync(student.Id, page, pageSize);
             if (result.Exams.IsNullOrEmpty()) return NotFound("No exams found.");
              return Ok(result);
+        }
+        
+        [HttpGet("student-exams")]
+        public async Task<IActionResult> GetExamsByStudent()
+        {
+            var studentIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(studentIdString, out var studentId))
+                return Unauthorized("Invalid or missing student ID.");
+
+            var exams = await _servicesProvider.ExamService.GetAllExamByStudentIdAsync(studentId);
+            return Ok(exams ?? new List<PMGSupportSystem.Repositories.Models.Exam>());
+        }
+
+
+
+         /// <summary>
+        /// API xác nhận công khai điểm cho tất cả các bài thi trong môn học.
+        /// </summary>
+        /// <param name="examId">ID của kỳ thi</param>
+        /// <returns>Trạng thái kết quả</returns>
+        [Authorize(Roles = "DepartmentLeader")]
+        [HttpPost("confirm-publish/{examId}")]
+        public async Task<IActionResult> ConfirmPublishExam([FromRoute] Guid examId)
+        {
+            // Get the ID of the user (DepartmentLeader) who is confirming the publish
+            var confirmedBy = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            // Call the service through IServicesProvider to confirm and publish grades for all submissions in the exam
+            var result = await _servicesProvider.ExamService.ConfirmAndPublishExamAsync(examId, confirmedBy);
+
+            if (result)
+            {
+                return Ok("Grades for all submissions in this exam have been successfully published.");
+            }
+
+            return BadRequest("Unable to publish grades for this exam.");
         }
     }
 }

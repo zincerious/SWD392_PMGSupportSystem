@@ -1,7 +1,6 @@
-﻿using Google.Apis.Auth;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PMGSupportSystem.DTOs;
+using PMGSupportSystem.Services.DTO;
 using PMGSupportSystem.Services;
 
 namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
@@ -30,8 +29,23 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             return Ok(jwt);
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPut("update-user/{userId}")]
+        public async Task<IActionResult> ToggleUserStatus([FromRoute] Guid userId)
+        {
+            var user = await _servicesProvider.UserService.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound($"User with ID {userId} not found.");
+            }
+
+            user.Status = !(user.Status ?? false);
+            await _servicesProvider.UserService.UpdateUserAsync(user);
+            return Ok(new { Message = "Update status successfully", UserAfterUpdate = user });
+        }
+
         [Authorize]
-        [HttpGet("logout")]
+        [HttpPost("logout")]
         public IActionResult Logout()
         {
             var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
@@ -52,6 +66,18 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 var importedUsers = await _servicesProvider.UserService.ImportUsersFromExcelAsync(stream);
                 return Ok(new { Message = "Users imported successfully!", Count = importedUsers.Count() });
             }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("get-users")]
+        public async Task<IActionResult> GetUsersAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var paginatedUsers = await _servicesProvider.UserService.GetPaginatedUsersAsync(page, pageSize);
+            return Ok(new
+            {
+                Items = paginatedUsers.Items,
+                TotalCount = paginatedUsers.TotalCount
+            });
         }
     }
 }
