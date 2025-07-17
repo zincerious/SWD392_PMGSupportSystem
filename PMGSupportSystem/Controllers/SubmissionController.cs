@@ -136,6 +136,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
+        
         [Authorize(Roles = "DepartmentLeader, Examiner")]
         [HttpGet("submission-table")]
         public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
@@ -143,6 +144,18 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             var (items, total) = await _servicesProvider.SubmissionService.GetSubmissionTableAsync(page, pageSize);
             return Ok(new { total, data = items });
         }
+        [Authorize(Roles = "Lecturer")]
+        [HttpPost("AI-Score")]
+        public async Task<IActionResult> GradeWithAI([FromBody] Guid submissionId)
+        {
+            var score = await _servicesProvider.AIService.GradeSubmissionAsync(submissionId);
+            if (score == null)
+            {
+                return NotFound("Submission or exam not found, or AI error.");
+            }
+            return Ok(new { aiScore = score });
+        }
+        
         
         [Authorize(Roles = "Lecturer")]
         [HttpPost("submit-grade/{submissionId}")]

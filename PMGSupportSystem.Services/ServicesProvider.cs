@@ -9,6 +9,7 @@ namespace PMGSupportSystem.Services
         ISubmissionService SubmissionService { get; }
         IExamService ExamService { get; }
         IDistributionService DistributionService { get; }
+        IAIService AIService { get; }
         IRegradeRequestService RegradeRequestService { get; }
         IGradeRoundService GradeRoundService { get; }
     }
@@ -29,6 +30,7 @@ namespace PMGSupportSystem.Services
             _emailService = emailService;
         }
 
+        public IAIService AIService  => _serviceProvider.GetRequiredService<IAIService>();
         public IUserService UserService
         {
             get

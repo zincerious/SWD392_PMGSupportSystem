@@ -2,6 +2,7 @@
 using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
 using System.Linq.Expressions;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
@@ -14,6 +15,7 @@ namespace PMGSupportSystem.Services
         Task CreateExamAsync(Exam exam);
         Task UpdateExamAsync(Exam exam);
         Task DeleteExamAsync(Exam exam);
+        Task<ListExamDTO> GetListOfExamsAsync(Guid studentId, int page, int pageSize);
         Task<(IEnumerable<Exam> exams, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status);
         Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester);
         Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt);
@@ -40,6 +42,22 @@ namespace PMGSupportSystem.Services
         public async Task DeleteExamAsync(Exam exam)
         {
             await _unitOfWork.ExamRepository.DeleteAsync(exam);
+        }
+
+        public async Task<ListExamDTO> GetListOfExamsAsync(Guid studentId,int page, int pageSize)
+        {
+            var result = await _unitOfWork.ExamRepository.GetExamPagedListAsync(studentId, page, pageSize);
+            var listExamDto = new ListExamDTO();
+            foreach (var s in result.Items)
+            {
+                listExamDto.Exams.Add(new ExamDTO()
+                {
+                    Id = s.ExamId,
+                    Semester = s.Semester,
+                });
+            }
+            listExamDto.TotalCount = result.TotalCount;
+            return listExamDto;
         }
 
         public async Task<Exam?> GetExamByIdAsync(Guid id)

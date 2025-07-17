@@ -5,6 +5,8 @@ using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services;
 using System.IO.Compression;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Controllers
 {
@@ -180,6 +182,25 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Student")]
+        [HttpGet("student-list-exam")]
+        public async Task<ActionResult<ListExamDTO>>GetExamsByStudentAsync(int page, int pageSize = 10)
+        {
+            var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(studentIdString, out var studentId))
+            {
+                return Unauthorized("Invalid or missing student ID.");
+            }
+
+            var student = await _servicesProvider.UserService.GetUserByIdAsync(studentId);
+            if (student == null)
+            {
+                return NotFound("Student not found.");
+            }
+            var result = await _servicesProvider.ExamService.GetListOfExamsAsync(student.Id, page, pageSize);
+            if (result.Exams.IsNullOrEmpty()) return NotFound("No exams found.");
+             return Ok(result);
+        }
+        
         [HttpGet("student-exams")]
         public async Task<IActionResult> GetExamsByStudent()
         {
@@ -215,6 +236,5 @@ namespace PMGSupportSystem.Controllers
 
             return BadRequest("Unable to publish grades for this exam.");
         }
-
     }
 }
