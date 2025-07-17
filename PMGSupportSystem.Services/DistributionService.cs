@@ -1,5 +1,6 @@
 ﻿using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
@@ -7,6 +8,7 @@ namespace PMGSupportSystem.Services
     {
         Task<IEnumerable<SubmissionDistribution>> GetDistributionsAsync();
         Task<IEnumerable<SubmissionDistribution>> GetDistributionsByLecturerIdAndExamIdAsync(Guid examId, Guid lecturerId);
+        Task<IEnumerable<SubmissionDistributionDTO>> GetAssignedSubmissionsByLecturerIdAndExamId(Guid lecturerId, Guid examId);
     }
     public class DistributionService : IDistributionService
     {
@@ -24,6 +26,19 @@ namespace PMGSupportSystem.Services
         public async Task<IEnumerable<SubmissionDistribution>> GetDistributionsByLecturerIdAndExamIdAsync(Guid examId, Guid lecturerId)
         {
             return await _unitOfWork.DistributionRepository.GetDistributionsByLecturerAndExam(examId, lecturerId);
+        }
+
+        public async Task<IEnumerable<SubmissionDistributionDTO>> GetAssignedSubmissionsByLecturerIdAndExamId(Guid lecturerId, Guid examId)
+        {
+            var distributions = await _unitOfWork.DistributionRepository.GetDistributionsByLecturerAndExam(examId, lecturerId);
+            return distributions.Select(d => new SubmissionDistributionDTO
+            {
+                SubmissionDistributionId = d.ExamDistributionId,
+                SubmissionId = d.SubmissionId,
+                AssignedAt = d.AssignedAt,
+                Deadline = d.Deadline,
+                Status = d.Status,
+            });
         }
     }
 }

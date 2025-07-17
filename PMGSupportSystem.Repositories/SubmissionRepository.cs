@@ -70,6 +70,7 @@ namespace PMGSupportSystem.Repositories
         {
             return await _context.Submissions
                 .Include(s => s.Student)
+                .Include(s => s.Exam)
                 .FirstOrDefaultAsync(s => s.SubmissionId == id);
         }
 
@@ -92,21 +93,10 @@ namespace PMGSupportSystem.Repositories
                         && gr.RoundNumber == (roundNumber - 1))).ToList();
             }
         }
-
         public async Task UpdateRangeAsync(IEnumerable<Submission> submissions)
         {
             _context.Submissions.UpdateRange(submissions);
             await _context.SaveChangesAsync();
         }
-        
-        
-        public async Task<Submission?> GetSubmissionByIdAsync(Guid submissionId)
-{
-    return await _context.Submissions
-        .Include(s => s.Student)  // Nếu cần thông tin về sinh viên
-        .Include(s => s.Exam)  // Nếu cần thông tin về kỳ thi
-        .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
-}
-
     }
 }
