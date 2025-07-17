@@ -23,14 +23,21 @@ namespace PMGSupportSystem.Services
         private IRegradeRequestService? _regradeRequestService;
         private IGradeRoundService? _gradeRoundService;
         private readonly IEmailService _emailService;
+        private  IAIService? _aiService;
+        private readonly IHttpClientFactory? _httpClientFactory;
 
-        public ServicesProvider(IUnitOfWork unitOfWork, IEmailService emailService)
+        public ServicesProvider(IUnitOfWork unitOfWork, IEmailService emailService, IHttpClientFactory httpClientFactory)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;
+            _httpClientFactory = httpClientFactory;
         }
 
-        public IAIService AIService  => _serviceProvider.GetRequiredService<IAIService>();
+        public IAIService AIService
+        {
+            get { return _aiService ??= new AIService(_unitOfWork, _httpClientFactory); }
+        }
+
         public IUserService UserService
         {
             get
