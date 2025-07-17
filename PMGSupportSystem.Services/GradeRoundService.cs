@@ -39,38 +39,38 @@ namespace PMGSupportSystem.Services
         }
 
         public async Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade, int roundNumber)
-    {
-        // Kiểm tra vòng chấm điểm (GradeRound)
-        var gradeRound = await _unitOfWork.GradeRoundRepository.GetGradeRoundBySubmissionAndRoundAsync(submissionId, roundNumber);
-
-        if (gradeRound == null)
         {
-            // Nếu chưa có vòng chấm điểm, tạo mới một vòng
-            gradeRound = new GradeRound
+            // Kiểm tra vòng chấm điểm (GradeRound)
+            var gradeRound = await _unitOfWork.GradeRoundRepository.GetGradeRoundBySubmissionAndRoundAsync(submissionId, roundNumber);
+
+            if (gradeRound == null)
             {
-                SubmissionId = submissionId,
-                RoundNumber = roundNumber,
-                LecturerId = lecturerId,
-                Score = grade,
-                Status = "Graded",
-                GradeAt = DateTime.Now
-            };
-            await _unitOfWork.GradeRoundRepository.AddAsync(gradeRound);
-        }
-        else
-        {
-            // Nếu đã có vòng chấm điểm, cập nhật điểm
-            gradeRound.Score = grade;
-            gradeRound.Status = "Graded";
-            gradeRound.GradeAt = DateTime.Now;
-            await _unitOfWork.GradeRoundRepository.UpdateAsync(gradeRound);
+                // Nếu chưa có vòng chấm điểm, tạo mới một vòng
+                gradeRound = new GradeRound
+                {
+                    SubmissionId = submissionId,
+                    RoundNumber = roundNumber,
+                    LecturerId = lecturerId,
+                    Score = grade,
+                    Status = "Graded",
+                    GradeAt = DateTime.Now
+                };
+                await _unitOfWork.GradeRoundRepository.AddAsync(gradeRound);
+            }
+            else
+            {
+                // Nếu đã có vòng chấm điểm, cập nhật điểm
+                gradeRound.Score = grade;
+                gradeRound.Status = "Graded";
+                gradeRound.GradeAt = DateTime.Now;
+                await _unitOfWork.GradeRoundRepository.UpdateAsync(gradeRound);
+            }
+
+            return gradeRound;
         }
 
-        return gradeRound;
+
     }
 
 
-    }
-    
-    
 }
