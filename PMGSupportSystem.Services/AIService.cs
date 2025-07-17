@@ -23,7 +23,7 @@ public class AIService : IAIService
     {
         var submission = await _unitOfWork.SubmissionRepository.GetSubmissionByIdAsync(submissionId);
         if (submission == null) return null;
-        var exam = await _unitOfWork.ExamRepository.GetByIdAsync(submission.ExamId.Value);
+        var exam = await _unitOfWork.ExamRepository.GetByIdAsync(submission.ExamId!.Value);
         if (exam == null) return null;
         var submissionText = await File.ReadAllTextAsync(submission.FilePath);
         var examText = await File.ReadAllTextAsync(exam.FilePath);

@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using PMGSupportSystem.Repositories;
+﻿using PMGSupportSystem.Repositories;
 
 namespace PMGSupportSystem.Services
 {
@@ -24,7 +23,7 @@ namespace PMGSupportSystem.Services
         private IGradeRoundService? _gradeRoundService;
         private readonly IEmailService _emailService;
         private  IAIService? _aiService;
-        private readonly IHttpClientFactory? _httpClientFactory;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public ServicesProvider(IUnitOfWork unitOfWork, IEmailService emailService, IHttpClientFactory httpClientFactory)
         {
