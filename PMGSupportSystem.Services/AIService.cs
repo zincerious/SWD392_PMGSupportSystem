@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using PMGSupportSystem.Repositories;
@@ -59,7 +60,7 @@ public class AIService : IAIService
         {
             return null;
         }
-        var score = decimal.Parse(match.Groups[1].Value);
+        var score = decimal.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
         submission.AiScore = score;
         await _unitOfWork.SaveChangesAsync();
 
