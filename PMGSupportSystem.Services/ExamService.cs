@@ -481,37 +481,58 @@ namespace PMGSupportSystem.Services
             }
         }
         
-        public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
+       public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
         {
-            var exam = await _unitOfWork.ExamRepository.GetExamByIdAsync(examId);
-            if (exam == null) return false;
-
+            // Lấy tất cả bài thi của môn học này
             var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
-            if (submissions == null || !submissions.Any()) return false;
-
-            foreach (var submission in submissions)
-            {
-                if (submission.FinalScore.HasValue && submission.Status != "Published")
-                {
-                    submission.Status = "Published";
-                    submission.PublishedBy = confirmedBy;               
-                }
-            }
-
-            exam.Status = "Published";
-
-            try
-            {
-                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);  // bạn cần có hàm này
-                await _unitOfWork.ExamRepository.UpdateAsync(exam);
-                await _unitOfWork.SaveChangesAsync();  // dùng đúng theo UnitOfWork
-                return true;
-            }
-            catch
+            if (submissions == null || !submissions.Any())
             {
                 return false;
             }
+
+            // Lặp qua tất cả bài thi và cập nhật điểm
+            foreach (var submission in submissions)
+            {
+                // Kiểm tra nếu bài thi đã có điểm và chưa công khai
+                if (submission.FinalScore.HasValue && submission.Status != "Published")
+                {
+                    // Cập nhật bài thi
+                    submission.Status = "Published";
+                    submission.PublishedBy = confirmedBy;
+                
+
+                    // Lấy tất cả SubmissionDistributions
+                    var submissionDistributions = await _unitOfWork.DistributionRepository.GetALLDistributionBySubmissionIdAsync(submission.SubmissionId);
+
+                    // Cập nhật trạng thái SubmissionDistribution
+                    foreach (var distribution in submissionDistributions)
+                    {           
+                        distribution.Status = "Published";  // Đánh dấu trạng thái là "Published"
+                        distribution.UpdatedAt = DateTime.Now;  // Cập nhật thời gian công khai
+                        await _unitOfWork.DistributionRepository.UpdateAsync(distribution);  // Cập nhật SubmissionDistribution
+                        var updatedSubmissionDistribution = await _unitOfWork.DistributionRepository.GetDistributionsBySubmissionIdAsync(distribution.ExamDistributionId);
+                        if (updatedSubmissionDistribution == null || updatedSubmissionDistribution.Status != "Published")
+                        {
+                            return false;  // Nếu không thành công, trả về false
+                        } 
+                    }
+
+                    // Lưu lại Submission
+                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                    var updatedSubmission = await _unitOfWork.SubmissionRepository.GetSubmissionByIdAsync(submission.SubmissionId);
+                    if (updatedSubmission == null || updatedSubmission.Status != "Published")
+                    {
+                        return false;  // Nếu không thành công, trả về false
+                    }   
+                }
+            }
+
+            // Lưu tất cả thay đổi
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
+
+
 
 
     }

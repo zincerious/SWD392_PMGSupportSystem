@@ -191,7 +191,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
         [Authorize(Roles = "Lecturer")]
         [HttpPost("submit-grade/{submissionId}")]
-        public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] decimal grade)
+        public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] GradeSubmissionDTO gradeSubmissionDTO)
         {
             // Lấy thông tin người chấm từ token
             var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -199,7 +199,12 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             {
                 return Unauthorized("Lecturer ID is required.");
             }
+            
             Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
+             if (!lecturerId.HasValue)
+            {
+                return BadRequest("Invalid lecturer ID.");
+            }
 
             // Lấy Submission từ cơ sở dữ liệu
             var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
@@ -245,8 +250,11 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             submission.FinalScore = grade; // Cập nhật điểm cuối cùng cho bài thi
             submission.Status = "Graded"; // Đánh dấu trạng thái bài thi là đã được chấm điểm
 
-            // Lưu lại bài thi
-            var result = await _servicesProvider.SubmissionService.UpdateSubmissionAsync(submission);
+            // Gọi service để tạo hoặc cập nhật vòng chấm điểm
+            await _servicesProvider.GradeRoundService.CreateOrUpdateGradeRoundAsync(submissionId, lecturerId.Value, gradeSubmissionDTO.Grade, gradeSubmissionDTO.RoundNumber);
+
+            // Cập nhật trạng thái bài thi
+            var result = await _servicesProvider.SubmissionService.UpdateSubmissionStatusAsync(submission, gradeSubmissionDTO.Grade);
             if (!result)
             {
                 return StatusCode(500, "Failed to submit grade.");
@@ -254,6 +262,5 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
             return Ok("Grade submitted successfully.");
         }
-
     }
 }
