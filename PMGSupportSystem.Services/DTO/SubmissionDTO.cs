@@ -20,5 +20,10 @@ namespace PMGSupportSystem.Services.DTO
       public decimal? FinalScore { get; set; }
       public string Status { get; set; } = "";
   }
+
+  public class AiScoreDto
+  {
+      public Guid SubmissionId { get; set; }
+  }
 }
 

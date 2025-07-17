@@ -147,9 +147,9 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         }
         [Authorize(Roles = "Lecturer")]
         [HttpPost("AI-Score")]
-        public async Task<IActionResult> GradeWithAI([FromBody] Guid submissionId)
+        public async Task<IActionResult> GradeWithAi([FromBody] AiScoreDto dto)
         {
-            var score = await _servicesProvider.AIService.GradeSubmissionAsync(submissionId);
+            var score = await _servicesProvider.AIService.GradeSubmissionAsync(dto.SubmissionId);
             if (score == null)
             {
                 return NotFound("Submission or exam not found, or AI error.");
