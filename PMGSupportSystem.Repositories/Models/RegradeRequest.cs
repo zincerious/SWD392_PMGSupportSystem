@@ -23,6 +23,8 @@ public partial class RegradeRequest
 
     public Guid? ExaminerId { get; set; }
 
+    public string Reason { get; set; }
+
     public virtual User Examiner { get; set; }
 
     public virtual User Student { get; set; }

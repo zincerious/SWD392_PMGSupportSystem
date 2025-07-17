@@ -3,19 +3,19 @@ using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services.DTO;
 using System.IO.Compression;
-using System.Linq.Expressions;
-using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
     public interface ISubmissionService
     {
-        Task<bool> UploadSubmissionsAsync(Guid assignmentId, IFormFile zipFile, Guid examinerId);
-        Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid assignmentId);
-        Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId);
+        Task<bool> UploadSubmissionsAsync(Guid examtId, IFormFile zipFile, Guid examinerId);
+        Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId);
         Task<IEnumerable<Submission>?> GetSubmissionsAsync();
-        Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid assignmentId, IEnumerable<Guid> studentIds);
+        Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid examId, IEnumerable<Guid> studentIds);
+        Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId);
         Task<(IEnumerable<SubmissionDTO> Items, int TotalCount)> GetSubmissionTableAsync(int page, int pageSize);
+        Task<bool> UpdateSubmissionAsync(Submission submission);
+        Task<Submission?> GetSubmissionByIdAsync(Guid submissionId);
     }
     public class SubmissionService : ISubmissionService
     {
@@ -58,8 +58,8 @@ namespace PMGSupportSystem.Services
                     continue;
                 }
 
-                var (studentId, normalizedName) = info.Value;
-                var student = await _unitOfWork.UserRepository.GetByIdAsync(studentId);
+                var (studentCode, normalizedName) = info.Value;
+                var student = await _unitOfWork.UserRepository.GetStudentByCodeAsync(studentCode);
                 if (student == null)
                 {
                     continue;
@@ -124,20 +124,20 @@ namespace PMGSupportSystem.Services
         {
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
             var parts = nameWithoutExtension.Split('_');
-            
+
             if (parts.Length >= 6)
             {
                 var studentName = parts[4];
-                var studentId = parts[5];
-                return (studentId, studentName.ToLowerInvariant());
+                var studentCode = parts[5];
+                return (studentCode, studentName.ToLowerInvariant());
             }
 
             return null;
         }
 
-        public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid assignmentId)
+        public async Task<IEnumerable<Submission>?> GetSubmissionsByExamIdAsync(Guid examId)
         {
-            return await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(assignmentId);
+            return await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
         }
 
         public async Task<GradeDTO?> GetSubmissionByExamIdAsync(Guid examId, Guid studentId)
@@ -165,23 +165,20 @@ namespace PMGSupportSystem.Services
 
         public async Task<(IEnumerable<SubmissionDTO> Items, int TotalCount)> GetSubmissionTableAsync(int page, int pageSize)
         {
-            // Get submission
+            // Get paging submissions
             var (submissions, totalCount) = await _unitOfWork.SubmissionRepository.GetPagedSubmissionsAsync(page, pageSize);
 
-            // Get examIds, studentIds, submissionIds
-            var examIds = submissions.Select(s => s.ExamId).Where(id => id.HasValue).Select(id => id.Value).Distinct().ToList();
-            var studentIds = submissions.Select(s => s.StudentId).Where(id => id.HasValue).Select(id => id.Value).Distinct().ToList();
+            var examIds = submissions.Select(s => s.ExamId).Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
+            var studentIds = submissions.Select(s => s.StudentId).Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
             var submissionIds = submissions.Select(s => s.SubmissionId).ToList();
-
 
             var exams = (await _unitOfWork.ExamRepository.GetAllAsync()).Where(e => examIds.Contains(e.ExamId)).ToList();
             var students = (await _unitOfWork.UserRepository.GetAllAsync()).Where(u => studentIds.Contains(u.Id)).ToList();
             var distributions = (await _unitOfWork.DistributionRepository.GetAllAsync())
                 .Where(d => submissionIds.Contains(d.SubmissionId ?? Guid.Empty)).ToList();
-            var lecturerIds = distributions.Where(d => d.LecturerId.HasValue).Select(d => d.LecturerId.Value).Distinct().ToList();
+            var lecturerIds = distributions.Where(d => d.LecturerId.HasValue).Select(d => d.LecturerId!.Value).Distinct().ToList();
             var lecturers = (await _unitOfWork.UserRepository.GetAllAsync()).Where(u => lecturerIds.Contains(u.Id)).ToList();
 
-            // Mapping
             var result = submissions.Select(sub =>
             {
                 var exam = exams.FirstOrDefault(e => e.ExamId == sub.ExamId);
@@ -192,8 +189,11 @@ namespace PMGSupportSystem.Services
                 return new SubmissionDTO
                 {
                     SubmissionId = sub.SubmissionId.ToString(),
-                    StudentId = student?.Code ?? "",
-                    ExamCode = exam?.FilePath ?? "",
+                    StudentCode = student?.Code ?? "",
+                    ExamId = exam?.ExamId.ToString() ?? "",
+                    ExamCode = exam?.Semester ?? "",
+                    AiScore = sub.AiScore,
+                    FinalScore = sub.FinalScore,
                     Status = sub.Status,
                     AssignedLecturer = lecturer?.FullName ?? ""
                 };
@@ -202,5 +202,29 @@ namespace PMGSupportSystem.Services
             return (result, totalCount);
         }
 
+        public async Task<bool> UpdateSubmissionAsync(Submission submission)
+        {
+            try
+            {
+                // Ensure you're using the UnitOfWork context to update the submission
+                await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                await _unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for better debugging
+                Console.WriteLine($"Error updating submission: {ex.Message}");
+                return false;
+            }
+        }
+
+        
+        public async Task<Submission?> GetSubmissionByIdAsync(Guid submissionId)
+        {
+            return await _unitOfWork.SubmissionRepository.GetSubmissionByIdAsync(submissionId);
+        }
+
+        
     }
 }

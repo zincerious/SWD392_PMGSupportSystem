@@ -19,13 +19,13 @@ namespace PMGSupportSystem.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Exam>?> GetAssignmentsAsync()
+        public async Task<IEnumerable<Exam>?> GetExamsAsync()
         {
             var exams = await _context.Exams.Include(a => a.UploadByNavigation).ToListAsync();
             return exams;
         }
 
-        public async Task<Exam?> GetAssignmentByIdAsync(Guid id)
+        public async Task<Exam?> GetExamByIdAsync(Guid id)
         {
             var exam = await _context.Exams
                 .Include(a => a.UploadByNavigation)
@@ -33,7 +33,7 @@ namespace PMGSupportSystem.Repositories
             return exam;
         }
 
-        public async Task<IEnumerable<Exam>?> SearchAssignmentsAsync(Guid? examinerId, DateTime uploadedAt, string status)
+        public async Task<IEnumerable<Exam>?> SearchExamsAsync(Guid? examinerId, DateTime uploadedAt, string status)
         {
             var exams = await _context.Exams.Include(a => a.UploadByNavigation)
                 .Where(e => (!examinerId.HasValue || e.UploadBy == examinerId) &&
@@ -43,7 +43,7 @@ namespace PMGSupportSystem.Repositories
             return exams;
         }
 
-        public async Task<bool> UploadBaremAsync(Guid assignmentId, Guid examinerId, IFormFile file, DateTime uploadedAt)
+        public async Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace PMGSupportSystem.Repositories
                 {
                     await file.CopyToAsync(stream);
                 }
-                var exam = await GetByIdAsync(assignmentId);
+                var exam = await GetByIdAsync(examId);
                 if (exam == null)
                 {
                     return false;
@@ -94,12 +94,18 @@ namespace PMGSupportSystem.Repositories
             return result.ToString();
         }
 
-        public async Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt)
+        public async Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester)
         {
             try
             {
                 var extension = Path.GetExtension(file.FileName).ToLower();
                 if (extension != ".jpg" && extension != ".png")
+                {
+                    return false;
+                }
+
+                var examByCode = await _context.Exams.FirstOrDefaultAsync(e => e.Semester == semester);
+                if (examByCode != null)
                 {
                     return false;
                 }
@@ -123,7 +129,7 @@ namespace PMGSupportSystem.Repositories
                     FilePath = filePath,
                     UploadBy = examinerId,
                     UploadedAt = DateTime.Now,
-                    Semester = GetCurrentSemesterCode(),
+                    Semester = semester,
                     BaremFile = "",
                     Status = "Uploaded"
                 };
@@ -137,39 +143,24 @@ namespace PMGSupportSystem.Repositories
             }
         }
 
-        public async Task<IEnumerable<Exam>> GetAssignmentsByExaminerAsync(Guid examinerId)
+        public async Task<IEnumerable<Exam>> GetExamsByExaminerAsync(Guid examinerId)
         {
             return await _context.Exams
+                .Include(e => e.UploadByNavigation)
                 .Where(a => a.UploadBy == examinerId)
                 .OrderByDescending(a => a.UploadedAt)
                 .ToListAsync();
         }
 
-        public async Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByAssignmentIdAsync(Guid id)
+        public async Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id)
         {
-            var exam = await GetAssignmentByIdAsync(id);
+            var exam = await GetExamByIdAsync(id);
             if (exam == null || string.IsNullOrEmpty(exam.FilePath) || string.IsNullOrEmpty(exam.BaremFile))
             {
                 return (null, null);
             }
 
             return (exam.FilePath, exam.BaremFile);
-        }
-
-        private string GetCurrentSemesterCode()
-        {
-            var now = DateTime.Now;
-            int month = now.Month;
-            int year = now.Year % 100;
-
-            string prefix = month switch
-            {
-                >= 1 and <= 4 => "SP",
-                >= 5 and <= 8 => "SU",
-                _ => "FA"
-            };
-
-            return $"{prefix}{year:D2}";
         }
 
         //trich xuat image => text
@@ -228,7 +219,7 @@ namespace PMGSupportSystem.Repositories
         }
         public async Task<string?> GetTextContentForAIAsync(Guid examId)
         {
-            var exam = await GetAssignmentByIdAsync(examId);
+            var exam = await GetExamByIdAsync(examId);
             if (exam == null || string.IsNullOrEmpty(exam.FilePath))
                 return null;
 
@@ -244,6 +235,7 @@ namespace PMGSupportSystem.Repositories
                 return null;
             }
         }
-
+        
+       
     }
 }

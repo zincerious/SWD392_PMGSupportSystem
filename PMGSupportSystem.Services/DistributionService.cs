@@ -6,7 +6,7 @@ namespace PMGSupportSystem.Services
     public interface IDistributionService
     {
         Task<IEnumerable<SubmissionDistribution>> GetDistributionsAsync();
-        Task<IEnumerable<SubmissionDistribution>> GetDistributionsByLecturerIdAndExamIdAsync(Guid assignmentId, Guid lecturerId);
+        Task<IEnumerable<SubmissionDistribution>> GetDistributionsByLecturerIdAndExamIdAsync(Guid examId, Guid lecturerId);
     }
     public class DistributionService : IDistributionService
     {

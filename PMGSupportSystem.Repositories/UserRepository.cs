@@ -2,6 +2,7 @@
 using PMGSupportSystem.Repositories.Basics;
 using PMGSupportSystem.Repositories.DBContext;
 using PMGSupportSystem.Repositories.Models;
+using System.Linq.Expressions;
 
 namespace PMGSupportSystem.Repositories
 {
@@ -22,6 +23,11 @@ namespace PMGSupportSystem.Repositories
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task<User?> GetStudentByCodeAsync(string code)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Code.ToLower() == code.ToLower());
         }
     }
 }

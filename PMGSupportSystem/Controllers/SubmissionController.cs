@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PMGSupportSystem.DTOs;
-using PMGSupportSystem.Repositories.Models;
+using PMGSupportSystem.Services.DTO;
 using PMGSupportSystem.Services;
 using System.IO.Compression;
 using System.Security.Claims;
-using PMGSupportSystem.Services.DTO;
+using PMGSupportSystem.Repositories.Models;
 
 namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 {
@@ -20,8 +19,8 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         }
 
         [Authorize(Roles = "Examiner")]
-        [HttpPost("upload-submission/{assignmentId}")]
-        public async Task<IActionResult> UploadSubmission([FromRoute] Guid assignmentId, [FromForm] FileDTO dto)
+        [HttpPost("upload-submission/{examId}")]
+        public async Task<IActionResult> UploadSubmission([FromRoute] Guid examId, [FromForm] FileDTO dto)
         {
             if (dto.DTOFile == null || dto.DTOFile.Length == 0)
             {
@@ -42,7 +41,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Examiner not found.");
             }
 
-            var result = await _servicesProvider.SubmissionService.UploadSubmissionsAsync(assignmentId, dto.DTOFile, examinerId!.Value);
+            var result = await _servicesProvider.SubmissionService.UploadSubmissionsAsync(examId, dto.DTOFile, examinerId!.Value);
             if (!result)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Failed to upload submissions.");
@@ -52,16 +51,16 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         }
 
         [Authorize(Roles = "Lecturer")]
-        [HttpGet("download-submissions/{assignmentId}")]
-        public async Task<IActionResult> DownloadSubmissionsAsync([FromRoute] Guid assignmentId)
+        [HttpGet("download-submissions/{examId}")]
+        public async Task<IActionResult> DownloadSubmissionsAsync([FromRoute] Guid examId)
         {
-            if (assignmentId == Guid.Empty)
+            if (examId == Guid.Empty)
             {
                 return BadRequest("Empty assignment id.");
             }
 
-            var assignment = await _servicesProvider.ExamService.GetExamByIdAsync(assignmentId);
-            if (assignment == null)
+            var exam = await _servicesProvider.ExamService.GetExamByIdAsync(examId);
+            if (exam == null)
             {
                 return NotFound("Not found assignment.");
             }
@@ -74,7 +73,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
             Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
 
-            var distributions = await _servicesProvider.DistributionService.GetDistributionsByLecturerIdAndExamIdAsync(assignmentId, parseId);
+            var distributions = await _servicesProvider.DistributionService.GetDistributionsByLecturerIdAndExamIdAsync(examId, parseId);
             if (distributions == null || !distributions.Any())
             {
                 return NotFound("Not found distributions.");
@@ -86,7 +85,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 .Select(id => id!.Value)
                 .ToList();
 
-            var submissions = await _servicesProvider.SubmissionService.GetSubmissionsByExamAndStudentsAsync(assignmentId, studentIds);
+            var submissions = await _servicesProvider.SubmissionService.GetSubmissionsByExamAndStudentsAsync(examId, studentIds);
             if (submissions == null || !submissions.Any())
             {
                 return NotFound("Not found submissions.");
@@ -103,7 +102,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                         var studentName = submission.Student.FullName ?? "Unknown";
                         var fileNameInZip = $"{studentName}_{submission.StudentId}{Path.GetExtension(submission.FilePath)}";
 
-                        var zipEntry =  zip.CreateEntry(fileNameInZip);
+                        var zipEntry = zip.CreateEntry(fileNameInZip);
                         using var entryStream = zipEntry.Open();
                         await entryStream.WriteAsync(fileBytes);
                     }
@@ -111,7 +110,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             }
 
             memoryStream.Position = 0;
-            var zipFileName = $"Submissions_{assignmentId}.zip";
+            var zipFileName = $"Submissions_{examId}.zip";
             return File(memoryStream.ToArray(), "application/zip", zipFileName);
         }
 
@@ -132,13 +131,13 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Student not found.");
             }
 
-            var grade = await _servicesProvider.SubmissionService.GetSubmissionByExamIdAsync(examId, studentId );
-            if (grade == null ||!grade.Status.Equals("Published"))
+            var grade = await _servicesProvider.SubmissionService.GetSubmissionByExamIdAsync(examId, studentId);
+            if (grade == null || !grade.Status.Equals("Published"))
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
         
-        [Authorize(Roles = "DepartmentLeader")]
+        [Authorize(Roles = "DepartmentLeader, Examiner")]
         [HttpGet("submission-table")]
         public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
         {
@@ -157,5 +156,72 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             return Ok(new { aiScore = score });
         }
         
+        
+        [Authorize(Roles = "Lecturer")]
+        [HttpPost("submit-grade/{submissionId}")]
+        public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] decimal grade)
+        {
+            // Lấy thông tin người chấm từ token
+            var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(lecturerIdString))
+            {
+                return Unauthorized("Lecturer ID is required.");
+            }
+            Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
+
+            // Lấy Submission từ cơ sở dữ liệu
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
+            if (submission == null)
+            {
+                return NotFound("Submission not found.");
+            }
+
+            // Kiểm tra quyền của giảng viên
+            if (submission.Exam.UploadBy != lecturerId)
+            {
+                return Forbid("You are not authorized to grade this submission.");
+            }
+
+            // Kiểm tra vòng chấm điểm (GradeRound) để nhập điểm vào
+            var roundNumber = 1; // Ví dụ: vòng chấm điểm đầu tiên
+            var gradeRound = submission.GradeRounds.FirstOrDefault(gr => gr.RoundNumber == roundNumber);
+            
+            if (gradeRound == null)
+            {
+                // Nếu chưa có vòng chấm điểm, tạo mới một vòng
+                gradeRound = new GradeRound
+                {
+                    SubmissionId = submission.SubmissionId,
+                    RoundNumber = roundNumber,
+                    LecturerId = lecturerId,
+                    Score = grade,
+                    Status = "Graded",
+                    GradeAt = DateTime.Now
+                };
+                await _servicesProvider.GradeRoundService.CreateAsync(gradeRound); // Giả sử có phương thức tạo mới
+            }
+            else
+            {
+                // Nếu đã có vòng chấm điểm, cập nhật điểm
+                gradeRound.Score = grade;
+                gradeRound.Status = "Graded";
+                gradeRound.GradeAt = DateTime.Now;
+                await _servicesProvider.GradeRoundService.UpdateAsync(gradeRound); // Giả sử có phương thức cập nhật
+            }
+
+            // Cập nhật lại trạng thái bài thi (nếu cần)
+            submission.FinalScore = grade; // Cập nhật điểm cuối cùng cho bài thi
+            submission.Status = "Graded"; // Đánh dấu trạng thái bài thi là đã được chấm điểm
+
+            // Lưu lại bài thi
+            var result = await _servicesProvider.SubmissionService.UpdateSubmissionAsync(submission);
+            if (!result)
+            {
+                return StatusCode(500, "Failed to submit grade.");
+            }
+
+            return Ok("Grade submitted successfully.");
+        }
+
     }
 }

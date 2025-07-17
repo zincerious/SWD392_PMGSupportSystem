@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\GeneratedText\" />
+    <Folder Include="wwwroot\Submissions\" />
   </ItemGroup>
 
 </Project>

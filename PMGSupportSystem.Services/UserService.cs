@@ -12,6 +12,8 @@ namespace PMGSupportSystem.Services
         Task<User?> GetUserByEmailAsync(string email);
         Task<IEnumerable<User>> GetUsersAsync();
         Task<IEnumerable<User>> ImportUsersFromExcelAsync(Stream excelStream);
+        Task UpdateUserAsync(User user);
+        Task<(IEnumerable<User> Items, int TotalCount)> GetPaginatedUsersAsync(int page, int pageSize);
     }
     public class UserService : IUserService
     {
@@ -19,6 +21,18 @@ namespace PMGSupportSystem.Services
         public UserService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
+        }
+
+        public async Task<(IEnumerable<User> Items, int TotalCount)> GetPaginatedUsersAsync(int page, int pageSize)
+        {
+            var users = await _unitOfWork.UserRepository.GetPagedListAsync(page, pageSize);
+            return users;
+        }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            await _unitOfWork.UserRepository.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<User?> GetUserByIdAsync(Guid userId)
