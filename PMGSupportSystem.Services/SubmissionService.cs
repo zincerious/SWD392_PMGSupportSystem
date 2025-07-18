@@ -16,13 +16,22 @@ namespace PMGSupportSystem.Services
         Task<(IEnumerable<SubmissionDTO> Items, int TotalCount)> GetSubmissionTableAsync(int page, int pageSize);
         Task<bool> UpdateSubmissionAsync(Submission submission);
         Task<Submission?> GetSubmissionByIdAsync(Guid submissionId);
+        Task<bool> CheckLecturerAccess(Guid submissionId, Guid lecturerId);
+        Task<bool> UpdateSubmissionStatusAsync(Submission submission, decimal grade);
     }
+
     public class SubmissionService : ISubmissionService
     {
         private readonly IUnitOfWork _unitOfWork;
         public SubmissionService(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
+        }
+
+        public async Task<bool> CheckLecturerAccess(Guid submissionId, Guid lecturerId)
+        {
+            var distribution = await _unitOfWork.DistributionRepository.GetDistributionByLecturerAndSubmissionAsync(lecturerId, submissionId);
+            return distribution != null;
         }
 
         public async Task<IEnumerable<Submission>?> GetSubmissionsByExamAndStudentsAsync(Guid examId, IEnumerable<Guid> studentIds)
@@ -219,12 +228,49 @@ namespace PMGSupportSystem.Services
             }
         }
 
-        
+
         public async Task<Submission?> GetSubmissionByIdAsync(Guid submissionId)
         {
             return await _unitOfWork.SubmissionRepository.GetSubmissionByIdAsync(submissionId);
         }
 
-        
+
+        public async Task<bool> UpdateSubmissionStatusAsync(Submission submission, decimal grade)
+        {
+            // Cập nhật trạng thái bài thi và điểm
+            submission.FinalScore = grade;
+            submission.Status = "Graded";
+
+            // Lấy tất cả SubmissionDistributions
+            var submissionDistributions = await _unitOfWork.DistributionRepository.GetALLDistributionBySubmissionIdAsync(submission.SubmissionId);
+
+            // Cập nhật trạng thái SubmissionDistribution
+            foreach (var distribution in submissionDistributions)
+            {
+                distribution.Status = "Graded";  // Đánh dấu trạng thái là "Graded"
+                distribution.UpdatedAt = DateTime.Now;  // Cập nhật thời gian công khai
+                await _unitOfWork.DistributionRepository.UpdateAsync(distribution);  // Cập nhật SubmissionDistribution
+                var updatedSubmissionDistribution = await _unitOfWork.DistributionRepository.GetDistributionsBySubmissionIdAsync(distribution.ExamDistributionId);
+                if (updatedSubmissionDistribution == null || updatedSubmissionDistribution.Status != "Graded")
+                {
+                    return false;  // Nếu không thành công, trả về false
+                }
+            }
+
+            try
+            {
+                // Cập nhật Submission
+                await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi hoặc xử lý nếu cần
+                Console.WriteLine($"Error updating submission: {ex.Message}");
+                return false;  // Trả về false nếu có lỗi
+            }
+
+            return true;  // Trả về true nếu cập nhật thành công
+        }
+
     }
 }

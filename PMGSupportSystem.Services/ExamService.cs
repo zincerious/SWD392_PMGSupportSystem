@@ -74,7 +74,7 @@ namespace PMGSupportSystem.Services
             // Get list examIds
             var examIds = submissions
                 .Where(s => s.ExamId.HasValue)
-                .Select(s => s.ExamId.Value)
+                .Select(s => s.ExamId!.Value)
                 .Distinct()
                 .ToList();
 
@@ -481,37 +481,34 @@ namespace PMGSupportSystem.Services
             }
         }
         
-        public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
+       public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
         {
-            var exam = await _unitOfWork.ExamRepository.GetExamByIdAsync(examId);
-            if (exam == null) return false;
-
+            // Lấy tất cả bài thi của môn học này
             var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
-            if (submissions == null || !submissions.Any()) return false;
-
-            foreach (var submission in submissions)
-            {
-                if (submission.FinalScore.HasValue && submission.Status == "Graded" || submission.Status == "Regrade")
-                {
-                    submission.Status = "Published";
-                    submission.PublishedBy = confirmedBy;               
-                }
-            }
-
-            exam.Status = "Published";
-
-            try
-            {
-                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);
-                await _unitOfWork.ExamRepository.UpdateAsync(exam);
-                await _unitOfWork.SaveChangesAsync(); 
-                return true;
-            }
-            catch
+            if (submissions == null || !submissions.Any())
             {
                 return false;
             }
+
+            // Lặp qua tất cả bài thi và cập nhật điểm
+            foreach (var submission in submissions)
+            {
+                // Kiểm tra nếu bài thi đã có điểm và chưa công khai
+                if (submission.FinalScore.HasValue && submission.Status == "Graded")
+                {
+                    // Cập nhật bài thi
+                    submission.Status = "Published";
+                    submission.PublishedBy = confirmedBy;
+                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission); 
+                }
+            }
+
+            // Lưu tất cả thay đổi
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
+
+
 
 
     }

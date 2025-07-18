@@ -6,7 +6,6 @@ using PMGSupportSystem.Services;
 using System.IO.Compression;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
-using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Controllers
 {
@@ -151,6 +150,27 @@ namespace PMGSupportSystem.Controllers
             return File(memoryStream.ToArray(), "application/zip", zipFileName);
         }
 
+        [Authorize(Roles = "Lecturer")]
+        [HttpGet("view-barem/{examId}")]
+        public async Task<IActionResult> ViewBaremAsync([FromRoute] Guid examId)
+        {
+            var exam = await _servicesProvider.ExamService.GetExamByIdAsync(examId);
+            if (exam == null || string.IsNullOrEmpty(exam.BaremFile))
+            {
+                return NotFound("Barem not found.");
+            }
+
+            var filePath = exam.BaremFile;
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("Barem file does not exist.");
+            }
+
+            var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return File(stream, "application/pdf", Path.GetFileName(filePath));
+        }
+
         [Authorize(Roles = "DepartmentLeader")]
         [HttpPost("assign-lecturers/{examId}")]
         public async Task<IActionResult> AutoAssignLecturersAsync([FromRoute] Guid examId)
@@ -183,7 +203,7 @@ namespace PMGSupportSystem.Controllers
 
         [Authorize(Roles = "Student")]
         [HttpGet("student-list-exam")]
-        public async Task<ActionResult<ListExamDTO>>GetExamsByStudentAsync(int page, int pageSize = 10)
+        public async Task<ActionResult<ListExamDTO>> GetExamsByStudentAsync(int page, int pageSize = 10)
         {
             var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(studentIdString, out var studentId))
@@ -198,9 +218,9 @@ namespace PMGSupportSystem.Controllers
             }
             var result = await _servicesProvider.ExamService.GetListOfExamsAsync(student.Id, page, pageSize);
             if (result.Exams.IsNullOrEmpty()) return NotFound("No exams found.");
-             return Ok(result);
+            return Ok(result);
         }
-        
+
         [HttpGet("student-exams")]
         public async Task<IActionResult> GetExamsByStudent()
         {
@@ -224,7 +244,12 @@ namespace PMGSupportSystem.Controllers
         public async Task<IActionResult> ConfirmPublishExam([FromRoute] Guid examId)
         {
             // Get the ID of the user (DepartmentLeader) who is confirming the publish
-            var confirmedBy = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            var confirmedByString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(confirmedByString, out var confirmedBy))
+            {
+                return Unauthorized("Invalid or missing department leader ID.");
+            }
 
             // Call the service through IServicesProvider to confirm and publish grades for all submissions in the exam
             var result = await _servicesProvider.ExamService.ConfirmAndPublishExamAsync(examId, confirmedBy);
