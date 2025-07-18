@@ -491,7 +491,7 @@ namespace PMGSupportSystem.Services
 
             foreach (var submission in submissions)
             {
-                if (submission.FinalScore.HasValue && submission.Status != "Published")
+                if (submission.FinalScore.HasValue && submission.Status == "Graded" || submission.Status == "Regrade")
                 {
                     submission.Status = "Published";
                     submission.PublishedBy = confirmedBy;               
@@ -502,9 +502,9 @@ namespace PMGSupportSystem.Services
 
             try
             {
-                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);  // bạn cần có hàm này
+                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);
                 await _unitOfWork.ExamRepository.UpdateAsync(exam);
-                await _unitOfWork.SaveChangesAsync();  // dùng đúng theo UnitOfWork
+                await _unitOfWork.SaveChangesAsync(); 
                 return true;
             }
             catch

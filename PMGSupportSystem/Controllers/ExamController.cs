@@ -214,13 +214,13 @@ namespace PMGSupportSystem.Controllers
 
 
 
-         /// <summary>
+        /// <summary>
         /// API xác nhận công khai điểm cho tất cả các bài thi trong môn học.
         /// </summary>
         /// <param name="examId">ID của kỳ thi</param>
         /// <returns>Trạng thái kết quả</returns>
         [Authorize(Roles = "DepartmentLeader")]
-        [HttpPost("confirm-publish/{examId}")]
+        [HttpPost("publish-scores/{examId}")]
         public async Task<IActionResult> ConfirmPublishExam([FromRoute] Guid examId)
         {
             // Get the ID of the user (DepartmentLeader) who is confirming the publish
