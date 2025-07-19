@@ -48,13 +48,13 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Student")]
-        [HttpPost("view-request")]
+        [HttpGet("view-request")]
         public async Task<IActionResult> GetRegradeRequestsByStudentIddAsync()
         {
             var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(studentIdString, out var studentId))
             {
-                return Unauthorized("Invalid or missing student ID.");
+                return Unauthorized("You are not authenticated !");
             }
             var regradeRequests = await _servicesProvider.RegradeRequestService.GetRegradeRequestsByStudentIdAsync(studentId);
             if (regradeRequests == null || !regradeRequests.Any())

@@ -22,7 +22,7 @@ namespace PMGSupportSystem.Services
         private IRegradeRequestService? _regradeRequestService;
         private IGradeRoundService? _gradeRoundService;
         private readonly IEmailService _emailService;
-        private  IAIService? _aiService;
+        private IAIService? _aiService;
         private readonly IHttpClientFactory _httpClientFactory;
 
         public ServicesProvider(IUnitOfWork unitOfWork, IEmailService emailService, IHttpClientFactory httpClientFactory)
