@@ -63,5 +63,13 @@ namespace PMGSupportSystem.Controllers
             }
             return Ok(regradeRequests);
         }
+
+        [Authorize(Roles = "Examiner")]
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetRegradeRequestsByExaminer([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var (items, total) = await _servicesProvider.RegradeRequestService.GetAllRegradeRequestsAsync(page, pageSize);
+            return Ok(new { total, data = items });
+        }
     }
 }
