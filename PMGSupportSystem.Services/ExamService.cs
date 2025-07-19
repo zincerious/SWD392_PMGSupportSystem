@@ -494,36 +494,12 @@ namespace PMGSupportSystem.Services
             foreach (var submission in submissions)
             {
                 // Kiểm tra nếu bài thi đã có điểm và chưa công khai
-                if (submission.FinalScore.HasValue && submission.Status != "Published")
+                if (submission.FinalScore.HasValue && submission.Status == "Graded")
                 {
                     // Cập nhật bài thi
                     submission.Status = "Published";
                     submission.PublishedBy = confirmedBy;
-                
-
-                    // Lấy tất cả SubmissionDistributions
-                    var submissionDistributions = await _unitOfWork.DistributionRepository.GetALLDistributionBySubmissionIdAsync(submission.SubmissionId);
-
-                    // Cập nhật trạng thái SubmissionDistribution
-                    foreach (var distribution in submissionDistributions)
-                    {           
-                        distribution.Status = "Published";  // Đánh dấu trạng thái là "Published"
-                        distribution.UpdatedAt = DateTime.Now;  // Cập nhật thời gian công khai
-                        await _unitOfWork.DistributionRepository.UpdateAsync(distribution);  // Cập nhật SubmissionDistribution
-                        var updatedSubmissionDistribution = await _unitOfWork.DistributionRepository.GetDistributionsBySubmissionIdAsync(distribution.ExamDistributionId);
-                        if (updatedSubmissionDistribution == null || updatedSubmissionDistribution.Status != "Published")
-                        {
-                            return false;  // Nếu không thành công, trả về false
-                        } 
-                    }
-
-                    // Lưu lại Submission
-                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
-                    var updatedSubmission = await _unitOfWork.SubmissionRepository.GetSubmissionByIdAsync(submission.SubmissionId);
-                    if (updatedSubmission == null || updatedSubmission.Status != "Published")
-                    {
-                        return false;  // Nếu không thành công, trả về false
-                    }   
+                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission); 
                 }
             }
 
