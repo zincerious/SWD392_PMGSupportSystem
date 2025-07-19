@@ -2,8 +2,11 @@
 {
     public class RegradeRequestDto
     {
-        public string? StudentCode { get; set; }
+        public Guid? RegradeRequestId { get; set; }  
+        public string? StudentCode { get; set; }       
+        public string? ExamCode { get; set; }         
         public string? Reason { get; set; }
+        public string? Status { get; set; }
     }
 
     public class UpdateStatusRegradeRequestDto

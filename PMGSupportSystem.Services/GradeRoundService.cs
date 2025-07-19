@@ -86,9 +86,5 @@ namespace PMGSupportSystem.Services
                 Status = gr.Status
             }).ToList();
         }
-
-
     }
-
-
 }
