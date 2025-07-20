@@ -33,5 +33,22 @@ namespace PMGSupportSystem.Repositories
         {
             return await _context.RegradeRequests.Where(rr => rr.StudentId == studentId).ToListAsync();
         }
+
+        public async Task<(IEnumerable<RegradeRequest> Items, int TotalCount)> GetPagedRegradeRequestsAsync(int page, int pageSize)
+        {
+            var query = _context.RegradeRequests
+                .Include(r => r.Student)
+                .Include(r => r.Submission)
+                    .ThenInclude(s => s.Exam);
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(r => r.RequestAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, total);
+        }
     }
 }
