@@ -36,6 +36,7 @@ namespace PMGSupportSystem.Repositories
             return await _context.SubmissionDistributions
                 .Where(d => d.Submission.ExamId == examId && d.LecturerId == lecturerId)
                 .Include(d => d.Submission)
+                    .Include(s => s.Submission.Exam)
                 .Include(d => d.Lecturer)
                 .ToListAsync();
         }
