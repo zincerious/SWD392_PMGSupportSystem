@@ -95,8 +95,10 @@ namespace PMGSupportSystem.Services
                     {
                         FullName = row.Cell(1).GetValue<string>()?.Trim(),
                         Email = row.Cell(2).GetValue<string>()?.Trim(),
+                        GoogleId = null,
                         Role = row.Cell(3).GetValue<string>()?.Trim(),
                         CreatedAt = DateTime.Now,
+                        Code = !string.IsNullOrWhiteSpace(row.Cell(4).GetValue<string>()?.Trim()) ? row.Cell(4).GetValue<string>()?.Trim() : null,
                         Status = true
                     };
 

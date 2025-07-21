@@ -52,7 +52,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             return Ok(new { Message = "Logout successful", Token = token, RevokedAt = DateTime.Now });
         }
 
-        [Authorize(Roles = "Admin, Examiner")]
+        //[Authorize(Roles = "Admin, Examiner")]
         [HttpPost("import-users")]
         public async Task<IActionResult> ImportUsersAsync([FromForm] FileDTO newUsersDTO)
         {
