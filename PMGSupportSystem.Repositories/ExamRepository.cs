@@ -198,6 +198,25 @@ namespace PMGSupportSystem.Repositories
             return txtPath;
         }
 
+        public async Task<(IEnumerable<Exam> Items, int TotalCount)> GetExamPagedListAsync(
+            Guid studentId,
+            int page,
+            int pageSize = 10
+            )
+        {
+            IQueryable<Exam> queryable = _context.Exams.Where(e => e.Submissions.Any(s => s.StudentId == studentId)); ;
+            int totalCount = await queryable.CountAsync();
+            var items = await queryable
+                .Include(e => e.Submissions.Where(s => s.StudentId == studentId))
+                .ThenInclude(s => s.Student)
+
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync()
+                ;
+
+            return (items, totalCount);
+        }
         public async Task<string?> GetTextContentForAIAsync(Guid examId)
         {
             var exam = await GetExamByIdAsync(examId);
@@ -216,7 +235,7 @@ namespace PMGSupportSystem.Repositories
                 return null;
             }
         }
-        
-       
+
+
     }
 }

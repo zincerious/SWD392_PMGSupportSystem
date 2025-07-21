@@ -1,4 +1,5 @@
-﻿using PMGSupportSystem.Repositories;
+﻿using Azure.Core;
+using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
 using PMGSupportSystem.Services.DTO;
 
@@ -9,6 +10,7 @@ namespace PMGSupportSystem.Services
         Task<bool> RequestRegradingAsync(string studentCode, string reason);
         Task<bool> ConfirmRequestRegradingAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto);
         Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId);
+        Task<(IEnumerable<RegradeRequestDto> Items, int TotalCount)> GetAllRegradeRequestsAsync(int page, int pageSize);
     }
     public class RegradeRequestService : IRegradeRequestService
     {
@@ -53,6 +55,7 @@ namespace PMGSupportSystem.Services
         public async Task<bool> ConfirmRequestRegradingAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto)
         {
             var regradeRequest = await _unitOfWork.RegradeRequestRepository.GetByIdAsync(updateStatusRegradeRequestDto.RegradeRequestId);
+            Console.WriteLine($">>>>>>>>> Regrade: {regradeRequest}");
             if (regradeRequest == null) return false;
 
             if (updateStatusRegradeRequestDto.Status == "Rejected")
@@ -77,7 +80,7 @@ namespace PMGSupportSystem.Services
                     if (distribution == null) return false;
                     distribution.Status = "InProgress";
                     distribution.LecturerId = null;
-                    
+
                     await _unitOfWork.DistributionRepository.UpdateAsync(distribution);
                     await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
                 }
@@ -89,6 +92,22 @@ namespace PMGSupportSystem.Services
         public async Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId)
         {
             return await _unitOfWork.RegradeRequestRepository.GetRegradeRequestsByStudentIdAsync(studentId);
+        }
+
+        public async Task<(IEnumerable<RegradeRequestDto> Items, int TotalCount)> GetAllRegradeRequestsAsync(int page, int pageSize)
+        {
+            var (list, total) = await _unitOfWork.RegradeRequestRepository.GetPagedRegradeRequestsAsync(page, pageSize);
+
+            var items = list.Select(r => new RegradeRequestDto
+            {
+                RegradeRequestId = r.RegradeRequestId,
+                StudentCode = r.Student != null ? r.Student.Code ?? "" : "",
+                ExamCode = r.Submission != null && r.Submission.Exam != null ? r.Submission.Exam.Semester ?? "" : "",
+                Reason = r.Reason,
+                Status = r.Status
+            });
+
+            return (items, total);
         }
 
     }

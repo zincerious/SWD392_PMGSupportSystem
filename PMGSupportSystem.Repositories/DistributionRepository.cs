@@ -34,9 +34,9 @@ namespace PMGSupportSystem.Repositories
         public async Task<IEnumerable<SubmissionDistribution>> GetDistributionsByLecturerAndExam(Guid examId, Guid lecturerId)
         {
             return await _context.SubmissionDistributions
-                .Include(d => d.Submission)
-                .Include(d => d.Lecturer)
                 .Where(d => d.Submission.ExamId == examId && d.LecturerId == lecturerId)
+                .Include(d => d.Submission)
+                    .Include(s => s.Submission.Exam)
                 .Include(d => d.Lecturer)
                 .ToListAsync();
         }
@@ -46,6 +46,14 @@ namespace PMGSupportSystem.Repositories
             return await _context.SubmissionDistributions
                 .FirstOrDefaultAsync(d => d.Submission.SubmissionId == submissionId);
         }
+
+        public async Task<SubmissionDistribution?> GetDistributionByLecturerAndSubmissionAsync(Guid lecturerId, Guid submissionId)
+        {
+            return await _context.SubmissionDistributions
+                .Include(d => d.Lecturer)
+                .FirstOrDefaultAsync(d => d.LecturerId == lecturerId && d.SubmissionId == submissionId);
+        }
+
         public async Task<IEnumerable<SubmissionDistribution>> GetALLDistributionBySubmissionIdAsync(Guid submissionId)
         {
             return await _context.SubmissionDistributions

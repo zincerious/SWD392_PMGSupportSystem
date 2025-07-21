@@ -49,6 +49,7 @@ namespace PMGSupportSystem.Repositories
         {
             return await _context.GradeRounds
                 .Where(gr => gr.SubmissionId == submissionId)
+                .Include(gr => gr.Lecturer)
                 .OrderBy(gr => gr.RoundNumber)
                 .ToListAsync();
         }
@@ -57,6 +58,6 @@ namespace PMGSupportSystem.Repositories
             return await _context.GradeRounds
                 .FirstOrDefaultAsync(gr => gr.SubmissionId == submissionId && gr.RoundNumber == roundNumber);
         }
-       
+
     }
 }

@@ -136,14 +136,59 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
+
         [Authorize(Roles = "DepartmentLeader, Examiner")]
         [HttpGet("submission-table")]
-        public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetSubmissions([FromQuery]int page = 1,[FromQuery] int pageSize = 10)
         {
             var (items, total) = await _servicesProvider.SubmissionService.GetSubmissionTableAsync(page, pageSize);
             return Ok(new { total, data = items });
         }
-        
+        [Authorize(Roles = "Lecturer")]
+        [HttpPost("AI-Score")]
+        public async Task<IActionResult> GradeWithAi([FromBody] AiScoreDto dto)
+        {
+            var score = await _servicesProvider.AIService.GradeSubmissionAsync(dto.SubmissionId);
+            if (score == null)
+            {
+                return NotFound("Submission or exam not found, or AI error.");
+            }
+            return Ok(new { aiScore = score });
+        }
+
+        [Authorize(Roles = "Lecturer")]
+        [HttpGet("submission-detail/{submissionId}")]
+        public async Task<IActionResult> GetSubmissionDetail([FromRoute] Guid submissionId)
+        {
+            var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(lecturerIdString))
+            {
+                return Unauthorized("Lecturer ID is required.");
+            }
+            Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
+
+            if (!await _servicesProvider.SubmissionService.CheckLecturerAccess(submissionId, parseId))
+            {
+                return Forbid("You are not authorized to access this submission.");
+            }
+
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
+            if (submission == null)
+            {
+                return NotFound("Submission not found.");
+            }
+
+            var filePath = submission.FilePath;
+            if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+            {
+                return NotFound("Submission file not found.");
+            }
+
+            var content = await System.IO.File.ReadAllTextAsync(filePath);
+            return Ok(new { Content = content });
+        }
+
+
         [Authorize(Roles = "Lecturer")]
         [HttpPost("submit-grade/{submissionId}")]
         public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] GradeSubmissionDTO gradeSubmissionDTO)
@@ -186,7 +231,5 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
             return Ok("Grade submitted successfully.");
         }
-
-
     }
 }
