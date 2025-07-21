@@ -62,6 +62,7 @@ public class AIService : IAIService
         }
         var score = decimal.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
         submission.AiScore = score;
+        await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
         await _unitOfWork.SaveChangesAsync();
 
         return score;
