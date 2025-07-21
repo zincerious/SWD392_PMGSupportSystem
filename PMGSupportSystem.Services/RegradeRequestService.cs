@@ -5,6 +5,12 @@ using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
+    public interface IRegradeRequestService
+    {
+        Task<bool> RequestRegradingAsync(string studentCode, string reason);
+        Task<bool> ConfirmRequestRegradingAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto);
+        Task<IEnumerable<RegradeRequest>> GetRegradeRequestsByStudentIdAsync(Guid studentId);
+    }
     public class RegradeRequestService : IRegradeRequestService
     {
         private readonly IUnitOfWork _unitOfWork;

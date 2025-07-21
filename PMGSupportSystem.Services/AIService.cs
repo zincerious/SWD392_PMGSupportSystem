@@ -6,6 +6,10 @@ using System.Net.Http.Json;
 
 namespace PMGSupportSystem.Services;
 
+public interface IAIService
+{
+    Task<decimal?> GradeSubmissionAsync(Guid submissionId);
+}
 public class AIService : IAIService
 {
     private readonly IUnitOfWork _unitOfWork;

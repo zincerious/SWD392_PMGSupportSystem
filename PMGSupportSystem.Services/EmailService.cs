@@ -5,6 +5,10 @@ using System.Net.Mail;
 
 namespace PMGSupportSystem.Services
 {
+    public interface IEmailService
+    {
+        Task SendMailAsync(string toEmail, string subject, string body);
+    }
     public class EmailService : IEmailService
     {
         private readonly SmtpSettings _smtpSetting;
