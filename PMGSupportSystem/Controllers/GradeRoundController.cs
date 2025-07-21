@@ -31,5 +31,13 @@ namespace PMGSupportSystem.Controllers
             var rounds = await _servicesProvider.GradeRoundService.GetGradeRoundsByExamAndStudentAsync(examId, studentId);
             return Ok(rounds);
         }
+
+        [Authorize(Roles = "Examiner, DepartmentLeader")]
+        [HttpGet("submission/{submissionId}")]
+        public async Task<IActionResult> GetBySubmissionIdAsync([FromRoute] Guid submissionId)
+        {
+            var result = await _servicesProvider.GradeRoundService.GetGradeRoundsBySubmissionIdAsync(submissionId);
+            return Ok(result);
+        }
     }
 }

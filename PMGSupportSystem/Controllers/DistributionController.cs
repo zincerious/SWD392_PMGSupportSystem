@@ -17,7 +17,7 @@ namespace PMGSupportSystem.Controllers
         }
 
         [HttpGet("assigned")]
-        public async Task<ActionResult<IEnumerable<SubmissionDistributionDTO>>> GetAssignedSubmissionsByLecturerIdAndExamId([FromQuery] Guid examId)
+        public async Task<ActionResult> GetAssignedSubmissionsByLecturerIdAndExamId([FromQuery] Guid examId)
         {
             var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(lecturerIdString, out var lecturerId))

@@ -1,5 +1,6 @@
 ﻿using PMGSupportSystem.Repositories;
 using PMGSupportSystem.Repositories.Models;
+using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
@@ -31,10 +32,10 @@ namespace PMGSupportSystem.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade, int roundNumber)
+        public async Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade)
         {
             // Kiểm tra vòng chấm điểm (GradeRound)
-            var gradeRound = await _unitOfWork.GradeRoundRepository.GetGradeRoundBySubmissionAndRoundAsync(submissionId, roundNumber);
+            var gradeRound = await _unitOfWork.GradeRoundRepository.GetLatestGradeRoundBySubmissionAsync(submissionId);
 
             if (gradeRound == null)
             {
@@ -42,7 +43,7 @@ namespace PMGSupportSystem.Services
                 gradeRound = new GradeRound
                 {
                     SubmissionId = submissionId,
-                    RoundNumber = roundNumber,
+                    RoundNumber = 1,
                     LecturerId = lecturerId,
                     Score = grade,
                     Status = "Graded",
@@ -62,8 +63,20 @@ namespace PMGSupportSystem.Services
             return gradeRound;
         }
 
-
+        public async Task<List<GradeRoundDTO>> GetGradeRoundsBySubmissionIdAsync(Guid submissionId)
+        {
+            var rounds = await _unitOfWork.GradeRoundRepository.GetBySubmissionIdAsync(submissionId);
+            return rounds.Select(gr => new GradeRoundDTO
+            {
+                Round = gr.RoundNumber,
+                Score = gr.Score,
+                LecturerName = gr.Lecturer?.FullName,
+                CoLecturerName = gr.CoLecturer?.FullName,
+                MeetingUrl = gr.MeetingUrl,
+                Note = gr.Note,
+                GradeAt = gr.GradeAt,
+                Status = gr.Status
+            }).ToList();
+        }
     }
-
-
 }
