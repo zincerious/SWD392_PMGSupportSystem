@@ -59,5 +59,13 @@ namespace PMGSupportSystem.Repositories
                 .FirstOrDefaultAsync(gr => gr.SubmissionId == submissionId && gr.RoundNumber == roundNumber);
         }
 
+        public async Task<GradeRound?> GetLatestGradeRoundBySubmissionAsync(Guid submissionId)
+        {
+                    return await _context.GradeRounds
+                .Where(gr => gr.SubmissionId == submissionId)
+                .OrderByDescending(gr => gr.RoundNumber)
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

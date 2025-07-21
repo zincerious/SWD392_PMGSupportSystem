@@ -9,7 +9,7 @@ namespace PMGSupportSystem.Services
         Task<List<GradeRound>> GetGradeRoundsByExamAndStudentAsync(Guid examId, Guid studentId);
         Task CreateAsync(GradeRound gradeRound);
         Task UpdateAsync(GradeRound gradeRound);
-        Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade, int roundNumber);
+        Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade);
         Task<List<GradeRoundDTO>> GetGradeRoundsBySubmissionIdAsync(Guid submissionId);
     }
     public class GradeRoundService : IGradeRoundService
@@ -40,10 +40,10 @@ namespace PMGSupportSystem.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade, int roundNumber)
+        public async Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade)
         {
             // Kiểm tra vòng chấm điểm (GradeRound)
-            var gradeRound = await _unitOfWork.GradeRoundRepository.GetGradeRoundBySubmissionAndRoundAsync(submissionId, roundNumber);
+            var gradeRound = await _unitOfWork.GradeRoundRepository.GetLatestGradeRoundBySubmissionAsync(submissionId);
 
             if (gradeRound == null)
             {
@@ -51,7 +51,7 @@ namespace PMGSupportSystem.Services
                 gradeRound = new GradeRound
                 {
                     SubmissionId = submissionId,
-                    RoundNumber = roundNumber,
+                    RoundNumber = 1,
                     LecturerId = lecturerId,
                     Score = grade,
                     Status = "Graded",
