@@ -84,7 +84,7 @@ namespace PMGSupportSystem.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Examiner,Lecturer")]
+        [Authorize(Roles = "Examiner")]
         [HttpGet("exams-examiner")]
         public async Task<ActionResult<IEnumerable<Exam>>> GetExamsByExaminerAsync()
         {
