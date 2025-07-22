@@ -5,6 +5,7 @@
         public Guid? SubmissionDistributionId { get; set; }
         public Guid? SubmissionId { get; set; }
         public Guid? ExamId { get; set; }
+        public string? StudentCode { get; set; }
         public decimal? FinalScore { get; set; }
         public string? Status { get; set; }
         public DateTime? AssignedAt { get; set; }
