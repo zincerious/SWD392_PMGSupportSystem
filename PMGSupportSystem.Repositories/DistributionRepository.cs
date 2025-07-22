@@ -37,6 +37,7 @@ namespace PMGSupportSystem.Repositories
                 .Where(d => d.Submission.ExamId == examId && d.LecturerId == lecturerId)
                 .Include(d => d.Submission)
                     .Include(s => s.Submission.Exam)
+                    .Include(d => d.Submission.Student)
                 .Include(d => d.Lecturer)
                 .ToListAsync();
         }

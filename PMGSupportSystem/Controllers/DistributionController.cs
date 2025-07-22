@@ -16,6 +16,7 @@ namespace PMGSupportSystem.Controllers
             _servicesProvider = servicesProvider;
         }
 
+        
         [HttpGet("assigned")]
         public async Task<ActionResult> GetAssignedSubmissionsByLecturerIdAndExamId([FromQuery] Guid examId)
         {
