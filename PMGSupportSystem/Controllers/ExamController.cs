@@ -84,22 +84,15 @@ namespace PMGSupportSystem.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Examiner,Lecturer")]
-        [HttpGet("exams-examiner")]
-        public async Task<ActionResult<IEnumerable<Exam>>> GetExamsByExaminerAsync()
+        [Authorize(Roles = "Lecturer, Examiner, DepartmentLeader")]
+        [HttpGet("exams")]
+        public async Task<ActionResult<IEnumerable<Exam?>?>> GetExamsLecturerAsync()
         {
-            var examinerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(examinerIdString))
-            {
-                return Unauthorized("Examiner ID is required.");
-            }
-            Guid? examinerId = Guid.TryParse(examinerIdString, out var parseId) ? parseId : null;
-
-            var assignments = await _servicesProvider.ExamService.GetExamsByExaminerAsync(parseId);
-            return Ok(assignments);
+            var exams = await _servicesProvider.ExamService.GetExamsAsync();
+            return Ok(exams);
         }
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("exams-admin")]
         public async Task<ActionResult<IEnumerable<Exam>>> GetAssignmentsAsync(int page = 1, int pageSize = 10, Guid? examninerId = null, DateTime? uploadedAt = null, string? status = null)
         {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PMGSupportSystem.Services;
 using PMGSupportSystem.Services.DTO;
 using System.Security.Claims;
@@ -16,6 +17,7 @@ namespace PMGSupportSystem.Controllers
             _servicesProvider = servicesProvider;
         }
 
+        [Authorize(Roles = "Lecturer")]
         [HttpGet("assigned")]
         public async Task<ActionResult> GetAssignedSubmissionsByLecturerIdAndExamId([FromQuery] Guid examId)
         {

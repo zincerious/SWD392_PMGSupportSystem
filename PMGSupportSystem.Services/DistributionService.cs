@@ -30,6 +30,7 @@ namespace PMGSupportSystem.Services
                 SubmissionDistributionId = d.ExamDistributionId,
                 SubmissionId = d.SubmissionId,
                 ExamId = d.Submission?.ExamId,
+                StudentCode = d.Submission?.Student?.Code,
                 AssignedAt = d.AssignedAt,
                 Deadline = d.Deadline,
                 Status = d.Status,

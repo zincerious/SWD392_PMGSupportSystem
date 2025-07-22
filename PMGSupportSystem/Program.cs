@@ -112,13 +112,13 @@ namespace PMGSupportSystem
             });
             builder.Services.AddAuthorization(options =>
             {
-                options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("Administrator"));
+                options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
                 options.AddPolicy("RequireExaminerRole", policy => policy.RequireRole("Examiner"));
                 options.AddPolicy("RequireStudentRole", policy => policy.RequireRole("Student"));
                 options.AddPolicy("RequireDepartmentLeaderRole", policy => policy.RequireRole("DepartmentLeader"));
                 options.AddPolicy("RequireLecturerRole", policy => policy.RequireRole("Lecturer"));
             });
-
+             
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
