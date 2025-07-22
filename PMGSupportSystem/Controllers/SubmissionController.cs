@@ -190,8 +190,8 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
 
         [Authorize(Roles = "Lecturer")]
-        [HttpPost("submit-grade/{submissionId}")]
-        public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] decimal gradeSubmission)
+        [HttpPost("submit-grade")]
+        public async Task<IActionResult> SubmitGrade([FromBody] SubmitGradeRequestDTO request)
         {
             // Lấy thông tin người chấm từ token
             var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -207,7 +207,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             }
 
             // Lấy Submission từ cơ sở dữ liệu
-            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(request.SubmissionId);
             if (submission == null)
             {
                 return NotFound("Submission not found.");
@@ -220,10 +220,10 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             }
 
             // Gọi service để tạo hoặc cập nhật vòng chấm điểm
-            await _servicesProvider.GradeRoundService.CreateOrUpdateGradeRoundAsync(submissionId, lecturerId.Value, gradeSubmission);
+            await _servicesProvider.GradeRoundService.CreateOrUpdateGradeRoundAsync(request.SubmissionId, lecturerId.Value, request.Grade);
 
             // Cập nhật trạng thái bài thi
-            var result = await _servicesProvider.SubmissionService.UpdateSubmissionStatusAsync(submission, gradeSubmission);
+            var result = await _servicesProvider.SubmissionService.UpdateSubmissionStatusAsync(submission, request.Grade);
             if (!result)
             {
                 return StatusCode(500, "Failed to submit grade.");
