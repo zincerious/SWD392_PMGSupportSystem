@@ -61,11 +61,10 @@ namespace PMGSupportSystem.Repositories
 
         public async Task<GradeRound?> GetLatestGradeRoundBySubmissionAsync(Guid submissionId)
         {
-                    return await _context.GradeRounds
+            return await _context.GradeRounds
                 .Where(gr => gr.SubmissionId == submissionId)
                 .OrderByDescending(gr => gr.RoundNumber)
                 .FirstOrDefaultAsync();
         }
-
     }
 }
