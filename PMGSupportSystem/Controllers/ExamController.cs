@@ -99,7 +99,7 @@ namespace PMGSupportSystem.Controllers
             return Ok(assignments);
         }
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("exams-admin")]
         public async Task<ActionResult<IEnumerable<Exam>>> GetAssignmentsAsync(int page = 1, int pageSize = 10, Guid? examninerId = null, DateTime? uploadedAt = null, string? status = null)
         {
