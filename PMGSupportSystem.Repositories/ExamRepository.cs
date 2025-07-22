@@ -53,7 +53,7 @@ namespace PMGSupportSystem.Repositories
                     return false;
                 }
                 var fileName = $"PMG201c_Barem_{examinerId}_{uploadedAt:ddMMyyyy_HHmmss}{extension}";
-                var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BaremFiles");
+                var folderPath = Path.Combine(Directory.GetCurrentDirectory() ,"wwwroot", "BaremFiles");
                 if (!Directory.Exists(folderPath))
                 {
                     Directory.CreateDirectory(folderPath);
