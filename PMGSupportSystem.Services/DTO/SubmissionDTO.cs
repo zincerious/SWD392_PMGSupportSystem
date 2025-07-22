@@ -1,3 +1,5 @@
+
+
 namespace PMGSupportSystem.Services.DTO
 {
     public class SubmissionDTO
@@ -22,5 +24,6 @@ namespace PMGSupportSystem.Services.DTO
     {
         public Guid SubmissionId { get; set; }
     }
+    
 }
 

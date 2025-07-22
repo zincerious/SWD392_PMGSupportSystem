@@ -1,8 +1,7 @@
 namespace PMGSupportSystem.Services.DTO;
-
-public class SubmitGradeRequestDTO
-{
-    public Guid SubmissionId { get; set; }
-    public decimal Grade { get; set; }
-    
-}
+using System.ComponentModel.DataAnnotations;
+public class GradeRequestDTO
+    {
+        [Range(0, 10, ErrorMessage = "Grade must be between 0 and 10.")]
+        public decimal grade { get; set; }
+    }
