@@ -8,7 +8,7 @@ namespace PMGSupportSystem.Services
         Task<List<GradeRound>> GetGradeRoundsByExamAndStudentAsync(Guid examId, Guid studentId);
         Task CreateAsync(GradeRound gradeRound);
         Task UpdateAsync(GradeRound gradeRound);
-        Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade);
+        Task<GradeRound> UpdateScoreGradeRoundAsync(Guid submissionId, Guid lecturerId, GradeRequestDTO gradeRequestDTO);
         Task<List<GradeRoundDTO>> GetGradeRoundsBySubmissionIdAsync(Guid submissionId);
     }
 }

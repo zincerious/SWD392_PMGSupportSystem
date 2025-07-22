@@ -32,34 +32,19 @@ namespace PMGSupportSystem.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        public async Task<GradeRound> CreateOrUpdateGradeRoundAsync(Guid submissionId, Guid lecturerId, decimal grade)
+        public async Task<GradeRound> UpdateScoreGradeRoundAsync(Guid submissionId, Guid lecturerId, GradeRequestDTO gradeRequestDTO)
         {
-            // Kiểm tra vòng chấm điểm (GradeRound)
+            // get GradeRound
             var gradeRound = await _unitOfWork.GradeRoundRepository.GetLatestGradeRoundBySubmissionAsync(submissionId);
 
-            if (gradeRound == null)
+            if(gradeRound != null)
             {
-                // Nếu chưa có vòng chấm điểm, tạo mới một vòng
-                gradeRound = new GradeRound
-                {
-                    SubmissionId = submissionId,
-                    RoundNumber = 1,
-                    LecturerId = lecturerId,
-                    Score = grade,
-                    Status = "Graded",
-                    GradeAt = DateTime.Now
-                };
-                await _unitOfWork.GradeRoundRepository.AddAsync(gradeRound);
-            }
-            else
-            {
-                // Nếu đã có vòng chấm điểm, cập nhật điểm
-                gradeRound.Score = grade;
+                gradeRound.Score = gradeRequestDTO.grade;
+                gradeRound.Note = gradeRequestDTO.note;
                 gradeRound.Status = "Graded";
                 gradeRound.GradeAt = DateTime.Now;
                 await _unitOfWork.GradeRoundRepository.UpdateAsync(gradeRound);
             }
-
             return gradeRound;
         }
 

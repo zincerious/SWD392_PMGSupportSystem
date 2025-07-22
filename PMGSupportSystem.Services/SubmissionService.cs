@@ -224,39 +224,28 @@ namespace PMGSupportSystem.Services
 
         public async Task<bool> UpdateSubmissionStatusAsync(Submission submission, decimal grade)
         {
-            // Cập nhật trạng thái bài thi và điểm
+            // Update score and status
             submission.FinalScore = grade;
             submission.Status = "Graded";
 
-            // Lấy tất cả SubmissionDistributions
-            var submissionDistributions = await _unitOfWork.DistributionRepository.GetALLDistributionBySubmissionIdAsync(submission.SubmissionId);
-
-            // Cập nhật trạng thái SubmissionDistribution
-            foreach (var distribution in submissionDistributions)
+            // Get distribution by submission ID
+            var submissionDistribution = await _unitOfWork.DistributionRepository.GetDistributionsBySubmissionIdAsync(submission.SubmissionId);
+            if (submissionDistribution != null)
             {
-                distribution.Status = "Graded";  // Đánh dấu trạng thái là "Graded"
-                distribution.UpdatedAt = DateTime.Now;  // Cập nhật thời gian công khai
-                await _unitOfWork.DistributionRepository.UpdateAsync(distribution);  // Cập nhật SubmissionDistribution
-                var updatedSubmissionDistribution = await _unitOfWork.DistributionRepository.GetDistributionsBySubmissionIdAsync(distribution.ExamDistributionId);
-                if (updatedSubmissionDistribution == null || updatedSubmissionDistribution.Status != "Graded")
-                {
-                    return false;  // Nếu không thành công, trả về false
-                }
+                submissionDistribution.Status = "Completed";
             }
 
             try
             {
-                // Cập nhật Submission
+                await _unitOfWork.DistributionRepository.UpdateAsync(submissionDistribution);
                 await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
             }
             catch (Exception ex)
             {
-                // Log lỗi hoặc xử lý nếu cần
-                Console.WriteLine($"Error updating submission: {ex.Message}");
-                return false;  // Trả về false nếu có lỗi
+                return false; 
             }
 
-            return true;  // Trả về true nếu cập nhật thành công
+            return true;
         }
 
     }
