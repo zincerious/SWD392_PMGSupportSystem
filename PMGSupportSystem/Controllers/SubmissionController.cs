@@ -158,8 +158,8 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
         
         
         [Authorize(Roles = "Lecturer")]
-        [HttpPost("submit-grade/{submissionId}")]
-        public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] decimal grade)
+        [HttpPost("submit-grade")]
+        public async Task<IActionResult> SubmitGrade([FromBody] SubmitGradeRequestDTO request)
         {
             // Lấy thông tin người chấm từ token
             var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -170,7 +170,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
 
             // Lấy Submission từ cơ sở dữ liệu
-            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(request.SubmissionId);
             if (submission == null)
             {
                 return NotFound("Submission not found.");
@@ -194,7 +194,7 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                     SubmissionId = submission.SubmissionId,
                     RoundNumber = roundNumber,
                     LecturerId = lecturerId,
-                    Score = grade,
+                    Score = request.Grade,
                     Status = "Graded",
                     GradeAt = DateTime.Now
                 };
@@ -203,14 +203,14 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             else
             {
                 // Nếu đã có vòng chấm điểm, cập nhật điểm
-                gradeRound.Score = grade;
+                gradeRound.Score = request.Grade;
                 gradeRound.Status = "Graded";
                 gradeRound.GradeAt = DateTime.Now;
                 await _servicesProvider.GradeRoundService.UpdateAsync(gradeRound); // Giả sử có phương thức cập nhật
             }
 
             // Cập nhật lại trạng thái bài thi (nếu cần)
-            submission.FinalScore = grade; // Cập nhật điểm cuối cùng cho bài thi
+            submission.FinalScore = request.Grade; // Cập nhật điểm cuối cùng cho bài thi
             submission.Status = "Graded"; // Đánh dấu trạng thái bài thi là đã được chấm điểm
 
             // Lưu lại bài thi
