@@ -464,6 +464,11 @@ namespace PMGSupportSystem.Services
         
        public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
         {
+            var exam = await _unitOfWork.ExamRepository.GetByIdAsync(examId);
+            if (exam == null)
+            {
+                return false;
+            }
             // Lấy tất cả bài thi của môn học này
             var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
             if (submissions == null || !submissions.Any())
@@ -483,7 +488,9 @@ namespace PMGSupportSystem.Services
                     await _unitOfWork.SubmissionRepository.UpdateAsync(submission); 
                 }
             }
-
+            
+            exam.Status = "Published";
+            await _unitOfWork.ExamRepository.UpdateAsync(exam);
             // Lưu tất cả thay đổi
             await _unitOfWork.SaveChangesAsync();
             return true;
