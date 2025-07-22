@@ -48,13 +48,13 @@ namespace PMGSupportSystem.Controllers
         }
 
         [Authorize(Roles = "Student")]
-        [HttpPost("view-request")]
+        [HttpGet("view-request")]
         public async Task<IActionResult> GetRegradeRequestsByStudentIddAsync()
         {
             var studentIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(studentIdString, out var studentId))
             {
-                return Unauthorized("Invalid or missing student ID.");
+                return Unauthorized("You are not authenticated !");
             }
             var regradeRequests = await _servicesProvider.RegradeRequestService.GetRegradeRequestsByStudentIdAsync(studentId);
             if (regradeRequests == null || !regradeRequests.Any())
@@ -62,6 +62,14 @@ namespace PMGSupportSystem.Controllers
                 return NotFound("No regrade requests found for the specified exam and round.");
             }
             return Ok(regradeRequests);
+        }
+
+        [Authorize(Roles = "Examiner")]
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetRegradeRequestsByExaminer([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var (items, total) = await _servicesProvider.RegradeRequestService.GetAllRegradeRequestsAsync(page, pageSize);
+            return Ok(new { total, data = items });
         }
     }
 }

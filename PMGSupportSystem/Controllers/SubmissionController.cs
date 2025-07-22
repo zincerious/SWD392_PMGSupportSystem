@@ -136,10 +136,10 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return NotFound("Grade not found.");
             return Ok(grade);
         }
-        
+
         [Authorize(Roles = "DepartmentLeader, Examiner")]
         [HttpGet("submission-table")]
-        public async Task<IActionResult> GetSubmissions(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetSubmissions([FromQuery]int page = 1,[FromQuery] int pageSize = 10)
         {
             var (items, total) = await _servicesProvider.SubmissionService.GetSubmissionTableAsync(page, pageSize);
             return Ok(new { total, data = items });
@@ -155,13 +155,11 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             }
             return Ok(new { aiScore = score });
         }
-        
-        
+
         [Authorize(Roles = "Lecturer")]
-        [HttpPost("submit-grade")]
-        public async Task<IActionResult> SubmitGrade([FromBody] SubmitGradeRequestDTO request)
+        [HttpGet("submission-detail/{submissionId}")]
+        public async Task<IActionResult> GetSubmissionDetail([FromRoute] Guid submissionId)
         {
-            // Lấy thông tin người chấm từ token
             var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(lecturerIdString))
             {
@@ -169,8 +167,47 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
             }
             Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
 
+            if (!await _servicesProvider.SubmissionService.CheckLecturerAccess(submissionId, parseId))
+            {
+                return Forbid("You are not authorized to access this submission.");
+            }
+
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
+            if (submission == null)
+            {
+                return NotFound("Submission not found.");
+            }
+
+            var filePath = submission.FilePath;
+            if (string.IsNullOrEmpty(filePath) || !System.IO.File.Exists(filePath))
+            {
+                return NotFound("Submission file not found.");
+            }
+
+            var content = await System.IO.File.ReadAllTextAsync(filePath);
+            return Ok(new { Content = content });
+        }
+
+
+        [Authorize(Roles = "Lecturer")]
+        [HttpPost("submit-grade/{submissionId}")]
+        public async Task<IActionResult> SubmitGrade([FromRoute] Guid submissionId, [FromBody] decimal gradeSubmission)
+        {
+            // Lấy thông tin người chấm từ token
+            var lecturerIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(lecturerIdString))
+            {
+                return Unauthorized("Lecturer ID is required.");
+            }
+            
+            Guid? lecturerId = Guid.TryParse(lecturerIdString, out var parseId) ? parseId : null;
+             if (!lecturerId.HasValue)
+            {
+                return BadRequest("Invalid lecturer ID.");
+            }
+
             // Lấy Submission từ cơ sở dữ liệu
-            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(request.SubmissionId);
+            var submission = await _servicesProvider.SubmissionService.GetSubmissionByIdAsync(submissionId);
             if (submission == null)
             {
                 return NotFound("Submission not found.");
@@ -182,39 +219,11 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
                 return Forbid("You are not authorized to grade this submission.");
             }
 
-            // Kiểm tra vòng chấm điểm (GradeRound) để nhập điểm vào
-            var roundNumber = 1; // Ví dụ: vòng chấm điểm đầu tiên
-            var gradeRound = submission.GradeRounds.FirstOrDefault(gr => gr.RoundNumber == roundNumber);
-            
-            if (gradeRound == null)
-            {
-                // Nếu chưa có vòng chấm điểm, tạo mới một vòng
-                gradeRound = new GradeRound
-                {
-                    SubmissionId = submission.SubmissionId,
-                    RoundNumber = roundNumber,
-                    LecturerId = lecturerId,
-                    Score = request.Grade,
-                    Status = "Graded",
-                    GradeAt = DateTime.Now
-                };
-                await _servicesProvider.GradeRoundService.CreateAsync(gradeRound); // Giả sử có phương thức tạo mới
-            }
-            else
-            {
-                // Nếu đã có vòng chấm điểm, cập nhật điểm
-                gradeRound.Score = request.Grade;
-                gradeRound.Status = "Graded";
-                gradeRound.GradeAt = DateTime.Now;
-                await _servicesProvider.GradeRoundService.UpdateAsync(gradeRound); // Giả sử có phương thức cập nhật
-            }
+            // Gọi service để tạo hoặc cập nhật vòng chấm điểm
+            await _servicesProvider.GradeRoundService.CreateOrUpdateGradeRoundAsync(submissionId, lecturerId.Value, gradeSubmission);
 
-            // Cập nhật lại trạng thái bài thi (nếu cần)
-            submission.FinalScore = request.Grade; // Cập nhật điểm cuối cùng cho bài thi
-            submission.Status = "Graded"; // Đánh dấu trạng thái bài thi là đã được chấm điểm
-
-            // Lưu lại bài thi
-            var result = await _servicesProvider.SubmissionService.UpdateSubmissionAsync(submission);
+            // Cập nhật trạng thái bài thi
+            var result = await _servicesProvider.SubmissionService.UpdateSubmissionStatusAsync(submission, gradeSubmission);
             if (!result)
             {
                 return StatusCode(500, "Failed to submit grade.");
@@ -222,6 +231,5 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
             return Ok("Grade submitted successfully.");
         }
-
     }
 }

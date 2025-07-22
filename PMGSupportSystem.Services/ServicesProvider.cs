@@ -1,18 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using PMGSupportSystem.Repositories;
+﻿using PMGSupportSystem.Repositories;
 
 namespace PMGSupportSystem.Services
 {
-    public interface IServicesProvider
-    {
-        IUserService UserService { get; }
-        ISubmissionService SubmissionService { get; }
-        IExamService ExamService { get; }
-        IDistributionService DistributionService { get; }
-        IAIService AIService { get; }
-        IRegradeRequestService RegradeRequestService { get; }
-        IGradeRoundService GradeRoundService { get; }
-    }
     public class ServicesProvider : IServicesProvider
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -23,8 +12,8 @@ namespace PMGSupportSystem.Services
         private IRegradeRequestService? _regradeRequestService;
         private IGradeRoundService? _gradeRoundService;
         private readonly IEmailService _emailService;
-        private  IAIService? _aiService;
-        private readonly IHttpClientFactory? _httpClientFactory;
+        private IAIService? _aiService;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public ServicesProvider(IUnitOfWork unitOfWork, IEmailService emailService, IHttpClientFactory httpClientFactory)
         {

@@ -40,10 +40,31 @@ namespace PMGSupportSystem.Repositories
         }
 
         // UpdateAsync phương thức kế thừa từ GenericRepository
-        public async Task UpdateAsync(GradeRound gradeRound)
+        public new async Task UpdateAsync(GradeRound gradeRound)
         {
             _context.GradeRounds.Update(gradeRound);
             await _context.SaveChangesAsync();
+        }
+        public async Task<List<GradeRound>> GetBySubmissionIdAsync(Guid submissionId)
+        {
+            return await _context.GradeRounds
+                .Where(gr => gr.SubmissionId == submissionId)
+                .Include(gr => gr.Lecturer)
+                .OrderBy(gr => gr.RoundNumber)
+                .ToListAsync();
+        }
+        public async Task<GradeRound?> GetGradeRoundBySubmissionAndRoundAsync(Guid submissionId, int roundNumber)
+        {
+            return await _context.GradeRounds
+                .FirstOrDefaultAsync(gr => gr.SubmissionId == submissionId && gr.RoundNumber == roundNumber);
+        }
+
+        public async Task<GradeRound?> GetLatestGradeRoundBySubmissionAsync(Guid submissionId)
+        {
+                    return await _context.GradeRounds
+                .Where(gr => gr.SubmissionId == submissionId)
+                .OrderByDescending(gr => gr.RoundNumber)
+                .FirstOrDefaultAsync();
         }
 
     }

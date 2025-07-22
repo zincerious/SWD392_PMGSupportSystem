@@ -6,25 +6,6 @@ using PMGSupportSystem.Services.DTO;
 
 namespace PMGSupportSystem.Services
 {
-    public interface IExamService
-    {
-        Task<IEnumerable<Exam>?> GetExamsAsync();
-        Task<Exam?> GetExamByIdAsync(Guid id);
-        Task<List<Exam>?> GetAllExamByStudentIdAsync(Guid studentId);
-        Task<IEnumerable<Exam>?> SearchExamsAsync(Guid examinerId, DateTime uploadedAt, string status);
-        Task CreateExamAsync(Exam exam);
-        Task UpdateExamAsync(Exam exam);
-        Task DeleteExamAsync(Exam exam);
-        Task<ListExamDTO> GetListOfExamsAsync(Guid studentId, int page, int pageSize);
-        Task<(IEnumerable<Exam> exams, int totalCount)> GetExamsWithPaginationAsync(int pageNumber, int pageSize, Guid? examninerId, DateTime? uploadedAt, string? status);
-        Task<bool> UploadExamPaperAsync(Guid examinerId, IFormFile file, DateTime uploadedAt, string semester);
-        Task<bool> UploadBaremAsync(Guid examId, Guid examinerId, IFormFile file, DateTime uploadedAt);
-        Task<IEnumerable<Exam>> GetExamsByExaminerAsync(Guid examinerId);
-        Task<(IEnumerable<Exam> Items, int TotalCount)> GetPagedExamsAsync(int page, int pageSize, Guid? examinerId, DateTime? uploadedAt, string? status);
-        Task<(string? ExamFilePath, string? BaremFilePath)> GetExamFilesByExamIdAsync(Guid id);
-        Task<bool> AutoAssignLecturersAsync(Guid assignedByUserId, Guid examId);
-        Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy);
-    }
     public class ExamService : IExamService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -74,7 +55,7 @@ namespace PMGSupportSystem.Services
             // Get list examIds
             var examIds = submissions
                 .Where(s => s.ExamId.HasValue)
-                .Select(s => s.ExamId.Value)
+                .Select(s => s.ExamId!.Value)
                 .Distinct()
                 .ToList();
 
@@ -481,37 +462,34 @@ namespace PMGSupportSystem.Services
             }
         }
         
-        public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
+       public async Task<bool> ConfirmAndPublishExamAsync(Guid examId, Guid confirmedBy)
         {
-            var exam = await _unitOfWork.ExamRepository.GetExamByIdAsync(examId);
-            if (exam == null) return false;
-
+            // Lấy tất cả bài thi của môn học này
             var submissions = await _unitOfWork.SubmissionRepository.GetSubmissionsByExamIdAsync(examId);
-            if (submissions == null || !submissions.Any()) return false;
-
-            foreach (var submission in submissions)
-            {
-                if (submission.FinalScore.HasValue && submission.Status != "Published")
-                {
-                    submission.Status = "Published";
-                    submission.PublishedBy = confirmedBy;               
-                }
-            }
-
-            exam.Status = "Published";
-
-            try
-            {
-                await _unitOfWork.SubmissionRepository.UpdateRangeAsync(submissions);  // bạn cần có hàm này
-                await _unitOfWork.ExamRepository.UpdateAsync(exam);
-                await _unitOfWork.SaveChangesAsync();  // dùng đúng theo UnitOfWork
-                return true;
-            }
-            catch
+            if (submissions == null || !submissions.Any())
             {
                 return false;
             }
+
+            // Lặp qua tất cả bài thi và cập nhật điểm
+            foreach (var submission in submissions)
+            {
+                // Kiểm tra nếu bài thi đã có điểm và chưa công khai
+                if (submission.FinalScore.HasValue && submission.Status == "Graded")
+                {
+                    // Cập nhật bài thi
+                    submission.Status = "Published";
+                    submission.PublishedBy = confirmedBy;
+                    await _unitOfWork.SubmissionRepository.UpdateAsync(submission); 
+                }
+            }
+
+            // Lưu tất cả thay đổi
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
+
+
 
 
     }
