@@ -1,0 +1,201 @@
+1. Five Main Project Stakeholders
+
+Project Sponsor: Provides funding and approves major project deliverables, including the final system. Makes key strategic decisions and ensures alignment with business goals.
+
+Project Manager: Oversees project planning, scheduling, budgeting, and reporting. Coordinates between teams and stakeholders. Ensures deliverables are met on time and within budget.
+
+UI/UX Designer: Designs all system interfaces, ensuring usability and accessibility for different roles (salespeople, managers, etc.). Responsible for mockups and visual consistency.
+
+Software Developer: Implements core functionalities based on requirements. Responsible for writing, testing, and deploying code.
+
+Quality Assurance (QA) Engineer: Validates that the system meets all business and technical requirements. Conducts manual and automated testing and reports defects.
+
+2. Five Project SMART Goals
+
+Sales Module within 5 Weeks:
+
+S: Develop a sales interface to allow salespeople to process purchases, generate/cancel bills.
+
+M: Improve billing speed by 50%.
+
+A: Achievable with available technology and timeline.
+
+R: Supports daily sales operations.
+
+T: Must be completed within 5 weeks.
+
+Inventory Management in 5 Weeks:
+
+S: Create a module to validate and track inventory.
+
+M: Generate reports 20% faster than current manual process.
+
+A: Feasible with automation.
+
+R: Improves efficiency for inventory managers.
+
+T: 5-week timeline.
+
+Integrated System within 15 Weeks:
+
+S: Build a unified platform covering sales and inventory.
+
+M: Increase task completion speed by 50%.
+
+A: Achievable over 3 development cycles.
+
+R: Based on client requirements.
+
+T: Entire system must be ready by Week 15.
+
+Sales Manager Dashboard in 10 Weeks:
+
+S: Dashboard to monitor billing, refunds, and transactions.
+
+M: Saves 30% of managerial reporting time.
+
+A: Doable within time and resources.
+
+R: Necessary for performance tracking.
+
+T: Ready by Week 10.
+
+Admin Module in 10 Weeks:
+
+S: Tool to manage products, categories, and pricing.
+
+M: Speeds up item management by 30%.
+
+A: Technically viable.
+
+R: Ensures inventory stays updated.
+
+T: Finalize in 10 weeks.
+
+3. Project Work Breakdown Structure (WBS)
+
+Level 1: Project Execution
+
+Level 2: Iteration 1 - Planning and First Demo
+
+Level 3:
+
+Project Charter, Requirement Specs
+
+UI/UX Prototype (Sales Module)
+
+Level 4:
+
+Sales Interface
+
+Bill Generation, Cancelation Function
+
+Level 2: Iteration 2 - Second Demo & Mid Evaluation
+
+Level 3:
+
+Functional Inventory Module
+
+Sales Manager Dashboard
+
+Level 4:
+
+Inventory Tracking, Report Generation
+
+Refund, Transfer Monitoring
+
+Level 2: Iteration 3 - Final Demo & QA
+
+Level 3:
+
+Admin Module
+
+Final Testing Reports
+
+Level 4:
+
+Add/Edit Product/Category
+
+Price Update Feature
+
+4. Five Project Risks and Mitigation Plans
+
+Time Overrun
+
+Description: Project may not meet deadline.
+
+Mitigation: Regular sprint reviews, buffer in timeline.
+
+Contingency: Reduce scope or request extension.
+
+Budget Overrun
+
+Description: Expenses may exceed allocated budget.
+
+Mitigation: Track expenses weekly.
+
+Contingency: Reallocate funds, seek additional support.
+
+Scope Creep (Extra Functionality Requested)
+
+Description: Client adds 3 new functions unexpectedly.
+
+Mitigation: Change control process.
+
+Contingency: Adjust timeline, budget.
+
+Impossible Technical Request
+
+Description: Clients request unfeasible features.
+
+Mitigation: Early technical discussions.
+
+Contingency: Negotiate trade-offs.
+
+Office Fire Incident
+
+Description: Loss of workspace/resources.
+
+Mitigation: Use cloud backup, remote tools.
+
+Contingency: Enable remote work, use coworking space.
+
+5. Project Schedule and Critical Path
+
+Activity Table (from Excel):
+
+Start -> A (3) -> B (5)
+Paths:
+  B -> C (2) -> F (3) -> I (3) = 13 days
+  B -> D (3) -> G (5) -> I (3) = 16 days
+  B -> E (5) -> H (4) -> I (3) = 17 days (Critical Path)
+
+Critical Path: Start → A → B → E → H → I = 3 + 5 + 5 + 4 + 3 = 20 days
+
+Speed-Up Recommendation:
+
+Goal: Reduce duration by 3 days (from 20 to 17)
+
+Solution 1: Reallocate Team from F to G during Wait Period
+
+Explanation: After C-F path finishes in 13 days, members in F have 4 idle days.
+
+Help: They can assist in G to reduce G from 5 → 2-3 days.
+
+Impact: Might affect focus but accelerates G and I.
+
+Solution 2: Reduce Scope or Optimize Testing
+
+Explanation: Simplify non-essential features or reduce manual testing.
+
+Help: Shortens duration without major resource cost.
+
+Impact: Slight quality compromise if not balanced.
+
+Assumptions:
+
+Team has overlapping skills to support other activities.
+
+Tasks can be parallelized and do not have heavy interdependencies beyond defined order.
+
+Budget is flexible to allow overtime or additional tools if required.
