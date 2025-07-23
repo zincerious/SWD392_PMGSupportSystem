@@ -1,0 +1,112 @@
+1)
+ Request 1/
+Project Name: Develop a Sales and Inventory Management System (SIMS)
+Description:
+This project involves developing an online Sales and Inventory Management System (SIMS) for a departmental store. The system will support multiple roles—salespeople, inventory managers, sales managers, and administrators—with exclusive access to functionalities such as billing, inventory validation, report generation, and product management. The objective is to streamline store operations, improve inventory tracking, and enhance the overall sales process through digital transformation. The system will be developed using an iterative and incremental model and is scheduled to go live in 15 weeks.
+
+Objectives:
++ To automate sales and billing processes for salespeople.
++ To enable accurate, real-time inventory tracking and validation.
++ To generate insightful sales and inventory reports.
++ To provide role-based secure access for various types of users.
++ To deliver the complete system within 15 weeks using agile practices.
+Customer/Sponsor: The departmental store management team, acting as the primary sponsor and end customer, will provide requirements, feedback, and approvals throughout the development.
+
+Success Criteria:
+All core modules (Sales, Inventory, Reports, Admin) implemented and tested.
+At least 90% test coverage on critical functions.
+User Acceptance Testing (UAT) completed with >85% satisfaction rate.
+Final system deployed on time with documentation delivered.
+Support for at least 50 concurrent users with no major system downtime.
+Project Constraints:
+Cost: Budget is limited to $50,000, covering software, labor, and testing.
+Time: 15-week development schedule using 2-week sprints.
+Resources: Limited to one full-stack developer, one tester, and one project manager, with part-time input from stakeholders.
+
+Request 2:
+Project Organization Type:
+The project will follow a functional organization structure where team members report to department heads. The project manager coordinates with stakeholders but has limited authority over resources directly.
+
+Recommended Organization Type:
+A projectized organizational structure is recommended. Under this model, the project manager has full authority over project tasks, timelines, and resources, allowing for efficient execution and clear accountability.
+
+Rationale:
+Given the tight 15-week timeline and need for frequent iterations, a projectized structure supports focused effort, faster decision-making, and better stakeholder communication. It avoids delays caused by resource-sharing conflicts in functional structures and ensures clear ownership of tasks and deliverables.
+
+Request 3:
+Work Breakdown Structure (WBS):
+
+Level 1: Project Stages
+
+Initiation
+Planning
+Execution
+Closure
+
+Level 2: Iterations / Sprints
+
+Sprint 1 (Week 1–2): Requirements & Architecture
+Sprint 2 (Week 3–4): Inventory Module
+Sprint 3 (Week 5–6): Billing & Sales
+Sprint 4 (Week 7–8): Admin Functions & Reports
+Sprint 5 (Week 9–10): Sales Manager Dashboard
+Sprint 6 (Week 11–12): Integration & Testing
+Sprint 7 (Week 13–14): UAT & Feedback
+Sprint 8 (Week 15): Final Deployment
+
+Level 3: Documents and Deliverable
+Sprint 1: Project Charter, Requirement Specification, System Desig
+Sprint 2: Inventory Module Release, Inventory Test Pla
+Sprint 3: Billing Module, Unit Test Result
+Sprint 4: Admin Functions, Report Generato
+Sprint 5: Sales Manager Vie
+Sprint 6: Integration Test Report, QA Repor
+Sprint 7: UAT Report, Feedback Lo
+Sprint 8: Final Deployment Package, User Guid
+
+Level 4: Work Packages (Features
+Inventory Dashboard, Stock Validatio
+Purchase Entry, Bill Generator, Bill Cancellatio
+Category Manager, Price Modifier, Report Generato
+Return Handling, Sales Summary, Cash Flow Report
+UAT Sessions, Training, Bug Fixe
+Deployment Script, Final Code Package
+
+Request 4:
+Identified Risks:
+Risk: Requirement Creep
+Probability: Medium
+Impact: High
+Response: Enforce change control procedures and stakeholder sign-offs for scope changes. Reserve 1 sprint buffer for late-stage change requests.
+Risk: Technology Integration Issues
+Probability: Medium
+Impact: Medium
+Response: Use modular architecture; conduct integration testing after each sprint. Contingency includes fallback mock data and decoupling services.
+Risk: Limited Developer Availability
+Probability: Medium
+Impact: High
+Response: Assign backup developer resource and prioritize work packages weekly. Monitor task loads closely and reassign as needed.
+Risk: UAT Rejection or Low Satisfaction
+Probability: Low
+Impact: High
+Response: Involve stakeholders in sprint demos and pre-UAT testing. Contingency plan: allocate Sprint 7 to address critical UAT feedback
+Risk: Data Loss or Security Breac
+Probability: Lo
+Impact: Hig
+Response: Implement automated backups and role-based access controls. Contingency: Use encrypted backups and restore protocols.
+
+Request 5:
+Start -> A -> B -> C -> F -> I -> End
+Duration: 3 + 5 + 2 + 3 + 3 = 16 days
+
+Start -> A -> B -> D -> G -> I -> End
+Duration: 3 + 5 + 3 + 5 + 3 = 19 days
+
+Start -> A -> B -> D -> H -> End
+Duration: 3 + 5 + 3 + 4 = 15 days
+
+Start -> A -> B -> E -> H -> End
+Duration: 3 + 5 + 5 + 4 = 17 days
+
+Critical Path: Path 2 -> Start -> A -> B -> D -> G -> I -> End
+Duration = 19 days

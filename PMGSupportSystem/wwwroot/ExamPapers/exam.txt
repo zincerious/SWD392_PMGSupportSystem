@@ -1,0 +1,27 @@
+PMG202c - Practical Exam 1 (Spring 2025)
+You are working on a project to develop an online Sales and Inventory Management System (SIMS) for a departmental store. There are registered people in the system and each of them may have some exclusive privileges on the system functionalities as below
+• The Sales people: see the status of the inventory, enter the items purchased by a customer and produce a bill for the same, cancel the produced bill
+• The inventory manager: check the status and validate the inventory, generate reports The sales manager: check the bills, transferred money, returning items and the reports
+• The administrator: add new items/categories to the inventory, change the price of an item To develop the SIMS system, you are required to use the iterative and incremental model as project management methodology and software development model, complete for going live within 15 weeks.
+Complete following 5 requests, list out your own assumptions in case you have any.
+1. Request 1 (weight 20%): specify five main project stakeholders by listing out the stakeholder names and relevant detailed descriptions.
+2. Request 2 (weight 20%): provide statements for five project SMART goals & give detailed explanation (about each criteria S-M-A-R-T) for each goal.
+3. Request 3 (weight 20%): create the project WBS in bullet format with following 4 levels
+Level 1 & 2 are the project stages/phases and their relevant iterations/sprints.
+• Level 3 includes the project documents (project management, engineering) and project release/deliverable names (if any) in each iteration/sprint.
+Level 4 includes the work packages (screens, functions) for each release/deliverable
+4. Request 4 (weight 20%): identify five project risks by listing out the risk name, description and relevant risk response plans (mitigation, contingency)
+5. Request 5 (20%): you have defined and estimate project schedule with below activities
+You are requested to do the critical path analysis to Provide all the paths (from the start to the end of the project) with duration for each.
+• After 5 days, your manager/sponsor ask you to speed up so that your project would finish 3 days sooner. Please define 2 solutions with relevant explanation to achieve that (how it would help and difficulties/impacts to the project)..
+Activity	Preceding activity	Duration in days
+start	NaN	0
+A	start	3
+B	A	5
+C	B	2
+D	B	3
+I	B	5
+F	C	3
+G	D	5
+H	D, E	4
+I	F, G	3
