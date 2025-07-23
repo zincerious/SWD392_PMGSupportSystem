@@ -26,14 +26,16 @@ public class AIService : IAIService
         var baremText = "";
         if (!exam.FilePath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
         {
-            _unitOfWork.ExamRepository.ExtractTextForAI(exam.FilePath);
-        }else examText = await File.ReadAllTextAsync(exam.FilePath);
+            examText = _unitOfWork.ExamRepository.ExtractTextForAI(exam.FilePath);
+        }
+        else examText = await File.ReadAllTextAsync(exam.FilePath);
         var submissionText = await File.ReadAllTextAsync(submission.FilePath);
         if (!exam.BaremFile.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
         {
-            _unitOfWork.ExamRepository.ExtractTextForAI(exam.BaremFile);
-        } else baremText = await File.ReadAllTextAsync(exam.BaremFile);
-        
+            baremText = _unitOfWork.ExamRepository.ExtractTextForAI(exam.BaremFile);
+        }
+        else baremText = await File.ReadAllTextAsync(exam.BaremFile);
+
 
         var prompt = $"Grade the following essay based on the exam question and the scoring rubric. " +
                      $"Only return a single score in the format x.x/10 — no explanations or comments.\n\n" +

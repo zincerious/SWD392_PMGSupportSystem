@@ -223,5 +223,15 @@ namespace PMGSuppor.ThangTQ.Microservices.API.Controllers
 
             return Ok("Grade submitted successfully.");
         }
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> Upload([FromForm] FileDTO DTOFile)
+        {
+            if (DTOFile.DTOFile == null || DTOFile.DTOFile.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            await _servicesProvider.ExamService.Upload(DTOFile.DTOFile);
+            return Ok("File uploaded successfully.");
+        }
     }
 }

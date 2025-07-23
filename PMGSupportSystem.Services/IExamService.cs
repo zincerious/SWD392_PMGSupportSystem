@@ -6,6 +6,7 @@ namespace PMGSupportSystem.Services
 {
     public interface IExamService
     {
+        Task Upload(IFormFile file);
         Task<IEnumerable<Exam>?> GetExamsAsync();
         Task<Exam?> GetExamByIdAsync(Guid id);
         Task<List<Exam>?> GetAllExamByStudentIdAsync(Guid studentId);

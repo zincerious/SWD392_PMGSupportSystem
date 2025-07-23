@@ -497,7 +497,27 @@ namespace PMGSupportSystem.Services
         }
 
 
+        public async Task Upload(IFormFile file)
+        {
+            var uploadsDir = Path.Combine("wwwroot", "UploadsTesting");
+            Directory.CreateDirectory(uploadsDir);
 
+            var filePath = Path.Combine(uploadsDir, file.FileName);
+
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            try
+            {
+                var text = _unitOfWork.ExamRepository.ExtractTextForAI(filePath);
+                var savedPath = _unitOfWork.ExamRepository.SaveTextToFile(text, filePath);
+            }
+            catch (Exception)
+            {
+            }
+        }
 
     }
 }
