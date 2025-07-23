@@ -1,0 +1,45 @@
+1)
+1. Request 1 : Five main project stakeholders 
+- Project Owner : The personal who  owner project and can work with project manager
+- Project Manager : The person who have plan and original team for project
+- BA : The person who connect customer with team
+- Team Member : about designer , coder , ... complete project was recieved from project manager, BA
+- QA/Test : Can check the risk, test project make sure the project have no problem
+2. Request 2 : Five project SMART goals 
+- S :  
+- M :
+- A :
+- R :
+- T :
+3. Request 3 : Project WBS 
+1.1.1 Online Sales and Inventory Management System (SIMS)
+        1.2.1 Registered people in the system 
+                 1.3.1 Each of people have some exclusive privile on the system functionalities 
+                           1.4.1 See status of the inventory, enter the items purchased by customer and produce a bill, cancle a bill.
+                            1.4.2 Check the status and validate the inventory, generate reports.
+                             1.4.3 Check the bills, transfered money, returning items and the reports.
+                             1.4.4 The administrator can add new items/categories to the inventory, changes the price of items.
+        1.2.2  Required to use the interative and incremental modell
+                 1.3.2  Project management methodology
+                  1.3.3 Software development model
+                                1.4.5 complete on 15 weeks.
+4. Request 4 : Five project risks 
+- Don't have time for deadline :  team no have enough time beacuse some reason
+- Problem about team work : Team work not good make waste time
+- More cost : have more cost when do project will wast time to talk to customers.
+- Customer want to changes function : changes function will make work of team slowly
+- Error about code : Have bug in code
+5. Request 5
+                       -> C(link B) -> F -> I 
+                              ->H(link D)
+Start -> A -> B -> D -> G -> I -> End
+
+                       -> E(linkB) - > H 
+  - We have :
+Start -> A -> B -> C -> F -> I -> End = 3 + 5 + 2 +3 +3 = 16 
+Start -> A -> B -> D -> H -> End = 3 + 5 + 3 + 4 = 15 
+Start -> A -> B -> D -> G -> I -> End = 3 + 5 + 3 + 5 + 3 = 19 (Critical path)
+Start -> A -> B -> E -> H -> End = 3 + 5 + 5 + 4 = 17
+  - Manager ask me to speed up the project finish 3 days sooner (16 days)
++ Solution 1 : Project will finisher faster but have alot of cost 
++ Solution 2 : Project wiil finisher faster and save cost but have alot of risk

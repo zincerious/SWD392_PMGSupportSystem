@@ -1,0 +1,78 @@
+1)
+1. 5 main project stakeholders:
+- Project owner: the sponsor of the project, give importance decision and approval for documents and budget.
+- Project manager: doing budgeting, making plan, schedule and documents. Also work as coach and support for team.
+- IU/UX designer: response in design all interfaces, images,....
+- Software developer: response in create and coding the system.
+- Qualitication Assurence: checking and make sure the system meet the project's goals and request.
+
+2. 5 project SMART goals:
+- In 5 weeks, create a sale software for the saler to see the status of the inventory, enter the items purchased by the customer and produce a bill or cancel the produce bill that help them work 50% faster:
+   + S: create a sale software
+   + M: 50% faster
+   + A: able to be done
+   + R: need for saler
+   + T: in 5 weeks
+- In 5 weeks, create an inventory manager software that can check the status and validate of the inventory and generate report 20% faster:
+   + S: create an inventory manager software
+   + M: 20% faster
+   + A: posible
+   + R: need for inventory manager
+   + T: in 5 weeks
+- In 15 weeks, create a system to adapt the requests from registered people, help them work 50% faster on sale and manage inventory:
+   + S: create a system for sales and inventory management.
+   + M: 50% faster
+   + A: it is posible
+   + R: relate with customer's request
+   + T: 15 weeks
+- Create a manager software for sale manager to check the bills, transferred money, return items and reports, help them work 30% faster in 10 weeks:
+   + S: create a manager software
+   + M: 30% faster
+   + A: able to be done
+   + R: need for sales manager 
+   + T: 10 weeks
+- In 10 weeks, create a monitor software for the administrator to add new items/catergories to the inventory, change the price of an items with 30% faster than before :
+   + S: create a monitor software
+   + M: 30% faster
+   + A: able to be done
+   + R: need for administrator
+   + T: in 10 weeks
+
+3. Create the project WBS:
+- Level 1: Make a demo and move to debugs
+- Level 2: Debugs and move to evaluate
+- Level 3: include project management, first demo softwares, evaluate reports in each sprint
+- Level 4: include work packeges (all functions) for each demo
+
+4. Identify 5 project risks:
+- The project run out of time: (des). Plans:
+   + Check the process frequencely to find out problem as soon as possible.
+   + Inform the stakeholder when it happended.
+   + Ask for more budget or reduce some details/functionalities.
+- The project run out of budget:
+   + Inform the stakeholders.
+   + Read all budget documents again, then make a report and as the project's sponsor for more budget.
+- The customer want to add 3 more system functionalities:
+   + Make meeting to make sure will it able to do and to add in the project's charter.
+   + Add for more time and budget.
+- The customer request imposible functionalities:
+   + Have a meeting with them and team to talk and explain.
+- The office of project team been burnt in fire:
+   + Should be double save in cloud.
+   + Buy assuarence before.
+   + Sent emails to inform all stakeholders.
+   + Let the team work from home or in cafe when the office is being rebuild. 
+
+5. Project schedule:
+(Note: A3 = done in day 3rd)
+* A3 -> B8 -> E13 -> H17 (17 work days)
+* A3 -> B8 -> D11 -> G16 (16 work days)
+* A3 -> B8 -> C10 -> F13 (13 work days) -> wait for G in 3 days
+-> I19 -> (add with H then end)
+=> 3+5+5+4+2= 19 work days
+- Describe: We can done 8 work days to complete Activity A and B. After that, Activity C, E and D can run at the same time and move to their next Activity (in order is H, G and F), it would take around 16-17 days. Activity I will be the last activity of all the paths, as it been done after Activity H 2 days. The project end with H and I activity's results.
+    
+After 5 days, when we still work in Activity B, there're a request to  speed up so that the project would finish 3 days sooner. Recommendation: 
+- As we have to wait for the Activity G in 3 days, all members in Activity F are free to help in Activity G. 
+- We can reduce some addition details or qualification to finish sooner.
+- Add for more budget to pay for team's member to work over time.

@@ -48,7 +48,7 @@ namespace PMGSupportSystem.Services
         public async Task<bool> ConfirmRequestRegradingAsync(UpdateStatusRegradeRequestDto updateStatusRegradeRequestDto)
         {
             var regradeRequest = await _unitOfWork.RegradeRequestRepository.GetByIdAsync(updateStatusRegradeRequestDto.RegradeRequestId);
-            Console.WriteLine($">>>>>>>>> Regrade: {regradeRequest}");
+
             if (regradeRequest == null) return false;
 
             if (updateStatusRegradeRequestDto.Status == "Rejected")
@@ -72,10 +72,12 @@ namespace PMGSupportSystem.Services
                     var distribution = await _unitOfWork.DistributionRepository.GetDistributionsBySubmissionIdAsync(regradeRequest.SubmissionId.Value);
                     if (distribution == null) return false;
                     distribution.Status = "InProgress";
+                    distribution.Lecturer = null;
                     distribution.LecturerId = null;
 
                     await _unitOfWork.DistributionRepository.UpdateAsync(distribution);
                     await _unitOfWork.SubmissionRepository.UpdateAsync(submission);
+                    await _unitOfWork.SaveChangesAsync();
                 }
             }
             await _unitOfWork.RegradeRequestRepository.UpdateAsync(regradeRequest);
